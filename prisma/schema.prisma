@@ -1,0 +1,147 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Utilisateur {
+  id_utilisateur String   @id @default(cuid())
+  nom            String
+  prenom         String
+  adresse        String?
+  telephone      String?  @db.VarChar(14)
+  email          String   @unique
+  motDePasse     String
+  ville          String?
+  image          String?
+  creeLe         DateTime @default(now())
+  miseAjourLe    DateTime @updatedAt
+  nomUtilisateur String   @unique
+  banni          Boolean  @default(false)
+  description    String?
+
+  role_id String
+  role    Role?  @relation(fields: [role_id], references: [id_role])
+
+  categories    Categorie[]
+  articles      Article[]
+  commentaires  Commentaire[]
+  evaluations   Evaluation[]
+  notifications Notification[]
+  abonnements   AbonnementReseauSocial[]
+  affectations  AffectationRole[]
+  upvotes       Upvote[]
+}
+
+model Role {
+  id_role      String            @id @default(cuid())
+  nomRole      String            @unique
+  utilisateurs Utilisateur[]
+  affectations AffectationRole[]
+}
+
+model Categorie {
+  id_categorie   String      @id @default(cuid())
+  nomCategorie   String      @unique
+  utilisateur_id String
+  utilisateur    Utilisateur @relation(fields: [utilisateur_id], references: [id_utilisateur])
+  articles       Article[]
+}
+
+model Article {
+  id_article  String    @id @default(cuid())
+  titre       String
+  contenu     String
+  creeLe      DateTime  @default(now())
+  miseAjourLe DateTime? @updatedAt
+
+  utilisateur_id String
+  categorie_id   String
+  utilisateur    Utilisateur @relation(fields: [utilisateur_id], references: [id_utilisateur], onDelete: Cascade)
+  categorie      Categorie   @relation(fields: [categorie_id], references: [id_categorie], onDelete: Cascade)
+
+  commentaires Commentaire[]
+  evaluations  Evaluation[]
+}
+
+model Commentaire {
+  id_commentaire String   @id @default(cuid())
+  contenu        String
+  creeLe         DateTime @default(now())
+  miseAjourLe    DateTime @updatedAt
+
+  utilisateur_id String
+  article_id     String
+  utilisateur    Utilisateur @relation(fields: [utilisateur_id], references: [id_utilisateur], onDelete: Cascade)
+  article        Article     @relation(fields: [article_id], references: [id_article], onDelete: Cascade)
+
+  upvotes Upvote[] // Relation avec les upvotes
+}
+
+model Evaluation {
+  id_evaluation String   @id @default(cuid())
+  valeur        Int      @default(1) @db.Integer
+  creeLe        DateTime @default(now())
+
+  utilisateur_id String
+  article_id     String
+  utilisateur    Utilisateur @relation(fields: [utilisateur_id], references: [id_utilisateur])
+  article        Article     @relation(fields: [article_id], references: [id_article], onDelete: Cascade)
+}
+
+model Notification {
+  id_notification String   @id @default(cuid())
+  type            String
+  contenu         String
+  lire            Boolean  @default(false)
+  creeLe          DateTime @default(now())
+
+  utilisateur_id String
+  utilisateur    Utilisateur @relation(fields: [utilisateur_id], references: [id_utilisateur])
+}
+
+model ReseauSocial {
+  id_reseauSocial String                   @id @default(uuid())
+  plateforme      String
+  url             String
+  abonnements     AbonnementReseauSocial[]
+}
+
+model AbonnementReseauSocial {
+  id_utilisateur  String
+  id_reseauSocial String
+  utilisateur     Utilisateur  @relation(fields: [id_utilisateur], references: [id_utilisateur])
+  reseauSocial    ReseauSocial @relation(fields: [id_reseauSocial], references: [id_reseauSocial])
+
+  @@id([id_utilisateur, id_reseauSocial])
+}
+
+model AffectationRole {
+  id_utilisateur String
+  id_role        String
+  utilisateur    Utilisateur @relation(fields: [id_utilisateur], references: [id_utilisateur])
+  role           Role        @relation(fields: [id_role], references: [id_role])
+
+  @@id([id_utilisateur, id_role])
+}
+
+model Upvote {
+  id_upvote String   @id @default(cuid())
+  creeLe    DateTime @default(now())
+
+  utilisateur_id String
+  commentaire_id String
+
+  utilisateur Utilisateur @relation(fields: [utilisateur_id], references: [id_utilisateur])
+  commentaire Commentaire @relation(fields: [commentaire_id], references: [id_commentaire])
+
+  @@unique([utilisateur_id, commentaire_id]) // Empêche un utilisateur de voter plusieurs fois pour le même commentaire
+}
