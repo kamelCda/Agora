@@ -1,10 +1,16 @@
 import prisma from "@/lib/prisma";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 
+// 🔧 Helper pour extraire l'ID utilisateur depuis l'URL
+function extractUserId(pathname: string): string | null {
+  const match = pathname.match(/\/bannis\/([^/]+)/);
+  return match ? match[1] : null;
+}
+
+// ✅ GET : récupérer tous les utilisateurs bannis
 export async function GET() {
-  // Vérification de la session active
   const session = await getServerSession(authOptions);
   if (!session) {
     return NextResponse.json(
@@ -13,7 +19,6 @@ export async function GET() {
     );
   }
 
-  // Vérification du rôle utilisateur
   if (
     !session.user.role ||
     (!session.user.role.includes("ADMINISTRATEUR") &&
@@ -26,21 +31,21 @@ export async function GET() {
   }
 
   try {
-    const utilisateursBannis = await prisma.utilisateur.findUnique({
-      where: { banni: true, id_utilisateur: session.user.id_utilisateur },
+    const utilisateursBannis = await prisma.utilisateur.findMany({
+      where: { banni: true },
     });
 
     return NextResponse.json(utilisateursBannis, { status: 200 });
   } catch (error: unknown) {
-    const err = error as Error;
-    return NextResponse.json({ error: err.message }, { status: 400 });
+    return NextResponse.json(
+      { error: (error as Error).message },
+      { status: 400 }
+    );
   }
 }
 
-export async function DELETE(
-  req: Request,
-  { params }: { params: { userId: string } }
-) {
+// ✅ DELETE : supprimer un utilisateur banni (admin only)
+export async function DELETE(req: NextRequest) {
   const session = await getServerSession(authOptions);
   if (!session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -50,9 +55,28 @@ export async function DELETE(
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
+  const userId = extractUserId(req.nextUrl.pathname);
+  if (!userId) {
+    return NextResponse.json(
+      { error: "userId introuvable dans l'URL" },
+      { status: 400 }
+    );
+  }
+
   try {
+    const utilisateur = await prisma.utilisateur.findUnique({
+      where: { id_utilisateur: userId },
+    });
+
+    if (!utilisateur || !utilisateur.banni) {
+      return NextResponse.json(
+        { error: "Utilisateur non trouvé ou non banni" },
+        { status: 404 }
+      );
+    }
+
     const utilisateurSupprime = await prisma.utilisateur.delete({
-      where: { id_utilisateur: params.userId, banni: true },
+      where: { id_utilisateur: userId },
     });
 
     return NextResponse.json(
@@ -60,7 +84,9 @@ export async function DELETE(
       { status: 200 }
     );
   } catch (error: unknown) {
-    const err = error as Error;
-    return NextResponse.json({ error: err.message }, { status: 400 });
+    return NextResponse.json(
+      { error: (error as Error).message },
+      { status: 400 }
+    );
   }
 }
