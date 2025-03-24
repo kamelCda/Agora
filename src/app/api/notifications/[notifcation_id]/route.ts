@@ -1,15 +1,24 @@
-// app/api/notifications/[notificationId]/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 
-// Récupération d’une notification par ID
-export async function GET(
-  _req: NextRequest,
-  { params }: { params: { notificationId: string } }
-) {
-  try {
-    const { notificationId } = params;
+// 🧩 Helper pour extraire notificationId depuis l’URL
+function extractNotificationId(pathname: string): string | null {
+  const match = pathname.match(/\/notifications\/([^/]+)/);
+  return match ? match[1] : null;
+}
 
+// ✅ GET : récupérer une notification par ID
+export async function GET(req: NextRequest) {
+  const notificationId = extractNotificationId(req.nextUrl.pathname);
+
+  if (!notificationId) {
+    return NextResponse.json(
+      { error: "notificationId introuvable dans l'URL" },
+      { status: 400 }
+    );
+  }
+
+  try {
     const notification = await prisma.notification.findUnique({
       where: { id_notification: notificationId },
     });
@@ -31,18 +40,20 @@ export async function GET(
   }
 }
 
-// Marquer une notification comme lue (ou mettre à jour n’importe quel champ)
+// ✅ PATCH : mettre à jour une notification (partiellement)
+export async function PATCH(req: NextRequest) {
+  const notificationId = extractNotificationId(req.nextUrl.pathname);
 
-export async function PATCH(
-  req: NextRequest,
-  { params }: { params: { notificationId: string } }
-) {
+  if (!notificationId) {
+    return NextResponse.json(
+      { error: "notificationId introuvable dans l'URL" },
+      { status: 400 }
+    );
+  }
+
   try {
-    const { notificationId } = params;
-    // On récupère seulement les champs qu'on veut potentiellement mettre à jour
     const { type, contenu, lire } = await req.json();
 
-    // 1) Récupérer la notification existante
     const currentNotification = await prisma.notification.findUnique({
       where: { id_notification: notificationId },
     });
@@ -54,16 +65,12 @@ export async function PATCH(
       );
     }
 
-    // 2) Construire un objet data pour l’update, en reprenant la valeur actuelle
-    // si le champ n’est pas fourni dans la requête
     const dataToUpdate = {
       type: type ?? currentNotification.type,
       contenu: contenu ?? currentNotification.contenu,
-      // Pour un booléen, on vérifie si c’est bien un booléen, sinon on conserve l'ancienne valeur
       lire: typeof lire === "boolean" ? lire : currentNotification.lire,
     };
 
-    // 3) Mettre à jour la notification avec ces données partielles
     const updatedNotification = await prisma.notification.update({
       where: { id_notification: notificationId },
       data: dataToUpdate,
@@ -79,14 +86,18 @@ export async function PATCH(
   }
 }
 
-// Supprimer une notification
-export async function DELETE(
-  _req: NextRequest,
-  { params }: { params: { notificationId: string } }
-) {
-  try {
-    const { notificationId } = params;
+// ✅ DELETE : supprimer une notification
+export async function DELETE(req: NextRequest) {
+  const notificationId = extractNotificationId(req.nextUrl.pathname);
 
+  if (!notificationId) {
+    return NextResponse.json(
+      { error: "notificationId introuvable dans l'URL" },
+      { status: 400 }
+    );
+  }
+
+  try {
     await prisma.notification.delete({
       where: { id_notification: notificationId },
     });
