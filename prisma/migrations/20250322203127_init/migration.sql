@@ -1,5 +1,0 @@
--- AlterTable
-ALTER TABLE "Utilisateur" ALTER COLUMN "nom" DROP NOT NULL,
-ALTER COLUMN "prenom" DROP NOT NULL,
-ALTER COLUMN "miseAjourLe" DROP NOT NULL,
-ALTER COLUMN "nomUtilisateur" DROP NOT NULL;

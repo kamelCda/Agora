@@ -35,7 +35,6 @@ export default function Sidebar() {
       label: "Gestion des utilisateurs",
       href: "/DashboardModerateur/gestion_utilisateursModerateur",
     },
-    { label: "Modération de contenu", href: "/DashboardModerateur/content" },
     { label: "Paramètres", href: "/DashboardModerateur/settings" },
     { label: "Articles", href: "/DashboardModerateur/articles" },
     { label: "Categories", href: "/DashboardModerateur/categories" },

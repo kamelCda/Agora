@@ -49,7 +49,7 @@ export default function DashboardLayout({
       <div className="flex-1 flex flex-col">
         <Header />
 
-        <main className="p-4 bg-muted flex-1 w-[60%] mx-auto">
+        <main className="p-4 bg-muted flex-1 w-[80%] mx-auto">
           <Card className="p-4">{children}</Card>
           <Sidebar />
         </main>
