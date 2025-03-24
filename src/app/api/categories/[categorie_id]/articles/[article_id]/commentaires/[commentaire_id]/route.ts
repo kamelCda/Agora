@@ -3,7 +3,7 @@ import prisma from "@/lib/prisma";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 
-function extractParamFromUrl(url: string, paramName: string): string | null {
+function extractParamFromUrl(url: string): string | null {
   const pattern =
     /\/categories\/([^/]+)\/articles\/([^/]+)\/commentaires\/([^/]+)/;
   const match = url.match(pattern);
@@ -21,10 +21,7 @@ function hasPermission(roles: string[] | undefined) {
 }
 
 export async function GET(req: NextRequest) {
-  const commentaire_id = extractParamFromUrl(
-    req.nextUrl.pathname,
-    "commentaire_id"
-  );
+  const commentaire_id = extractParamFromUrl(req.nextUrl.pathname);
   if (!commentaire_id) {
     return NextResponse.json({ error: "Paramètre manquant" }, { status: 400 });
   }
