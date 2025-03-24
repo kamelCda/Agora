@@ -3,21 +3,19 @@ import prisma from "@/lib/prisma";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 
-interface Params {
-  params: {
-    commentaire_id: string;
-  };
-}
-
-export async function GET(req: NextRequest, { params }: Params) {
+export async function GET(
+  req: NextRequest,
+  { params }: { params: { commentaire_id: string } }
+) {
   const { commentaire_id } = params;
   try {
     const commentaire = await prisma.commentaire.findUnique({
       where: { id_commentaire: commentaire_id },
     });
     return NextResponse.json({ success: true, commentaire }, { status: 201 });
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 400 });
+  } catch (error: unknown) {
+    const err = error as Error;
+    return NextResponse.json({ error: err.message }, { status: 400 });
   }
 }
 
@@ -28,7 +26,10 @@ function hasPermission(roles: string[] | undefined) {
   );
 }
 
-export async function DELETE(req: NextRequest, { params }: Params) {
+export async function DELETE(
+  req: NextRequest,
+  { params }: { params: { commentaire_id: string } }
+) {
   // Check session and roles
   const session = await getServerSession(authOptions);
   if (!session) {
@@ -66,7 +67,10 @@ export async function DELETE(req: NextRequest, { params }: Params) {
   }
 }
 
-export async function PUT(req: NextRequest, { params }: Params) {
+export async function PUT(
+  req: NextRequest,
+  { params }: { params: { commentaire_id: string } }
+) {
   // Check session and roles
   const session = await getServerSession(authOptions);
   if (!session) {

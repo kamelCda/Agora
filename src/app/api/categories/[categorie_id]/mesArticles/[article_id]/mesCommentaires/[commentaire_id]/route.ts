@@ -15,7 +15,9 @@ export async function GET(req: NextRequest, { params }: Params) {
       { success: true, MonCommentaire },
       { status: 201 }
     );
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 400 });
+  } catch (error: unknown) {
+    const err = error as Error;
+    return NextResponse.json({ error: err.message }, { status: 400 });
   }
+  
 }

@@ -20,7 +20,7 @@ const CreateArticleForm: React.FC<CreateArticleFormProps> = ({
   const handleAddArticle = async (e: FormEvent) => {
     e.preventDefault();
     if (!selectedCategory) {
-      alert("Veuillez d'abord sélectionner une catégorie");
+      alert("Veuillez d&apos;abord sélectionner une catégorie");
       return;
     }
     try {
@@ -35,7 +35,7 @@ const CreateArticleForm: React.FC<CreateArticleFormProps> = ({
           categorie_id: selectedCategory,
         }),
       });
-      if (!res.ok) throw new Error("L'ajout de l'article a échoué");
+      if (!res.ok) throw new Error("L&apos;ajout de l&apos;article a échoué");
       const data = await res.json();
 
       // Mise à jour de la liste locale
@@ -45,7 +45,7 @@ const CreateArticleForm: React.FC<CreateArticleFormProps> = ({
       setNewTitre("");
       setNewContenu("");
     } catch (error) {
-      console.error("Erreur lors de l'ajout de l'article :", error);
+      console.error("Erreur lors de l&apos;ajout de l&apos;article :", error);
     }
   };
 

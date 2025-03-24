@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextResponse, NextRequest } from "next/server";
 import prisma from "@/lib/prisma";
 import { getServerSession } from "next-auth/next";
@@ -25,8 +24,9 @@ export async function GET(req: NextRequest, { params }: Params) {
       },
     });
     return NextResponse.json({ success: true, article }, { status: 201 });
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 400 });
+  } catch (error: unknown) {
+    const err = error as Error;
+    return NextResponse.json({ error: err.message }, { status: 400 });
   }
 }
 
@@ -63,8 +63,9 @@ export async function DELETE(req: NextRequest, { params }: Params) {
       { success: true, "article supprimé": article },
       { status: 201 }
     );
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 400 });
+  } catch (error: unknown) {
+    const err = error as Error;
+    return NextResponse.json({ error: err.message }, { status: 400 });
   }
 }
 
@@ -101,7 +102,8 @@ export async function PUT(req: NextRequest, { params }: Params) {
       { success: true, "article modifié": article },
       { status: 201 }
     );
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 400 });
+  } catch (error: unknown) {
+    const err = error as Error;
+    return NextResponse.json({ error: err.message }, { status: 400 });
   }
 }

@@ -31,30 +31,6 @@ export function useMyCategories() {
     }
   }, [session, status, router]);
 
-  // Récupérer les catégories associées à l'utilisateur authentifié via la route spécifique
-  const fetchCategories = async () => {
-    if (!session || !session.user.id_utilisateur) return;
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await fetch(
-        `/api/utilisateurs/${session.user.id_utilisateur}/mesCategories`
-      );
-      if (!res.ok) throw new Error("Échec de la récupération des catégories");
-      const data = await res.json();
-      console.log("data de l'utilisateur :" + data);
-      setCategories(data.mescategories ?? []);
-    } catch (error) {
-      if (error instanceof Error) {
-        setError(error.message);
-      } else {
-        setError("Une erreur inconnue s'est produite");
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
-
   // Ajouter une nouvelle catégorie via la route spécifique pour l'utilisateur connecté
   const addCategory = async (name: string) => {
     if (!session || !session.user.id_utilisateur) {
@@ -115,7 +91,6 @@ export function useMyCategories() {
   // Chargement des catégories dès que la session est authentifiée et validée
   useEffect(() => {
     if (status === "authenticated" && session) {
-      fetchCategories();
     }
   }, [session, status]);
 

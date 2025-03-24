@@ -28,11 +28,13 @@ export function useUsersBannis() {
           throw new Error("Les données reçues ne sont pas un tableau.");
         }
       })
-      .catch((error: any) => {
-        console.error(error);
-        setError(error.message);
+      .catch((error: unknown) => {
+        const err = error as Error;
+        console.error(err);
+        setError(err.message);
         setUsers([]);
       })
+
       .finally(() => setLoading(false));
   }, []);
 

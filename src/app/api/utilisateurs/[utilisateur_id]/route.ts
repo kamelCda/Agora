@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 const headers = {
   "Content-Type": "application/json",
 };
@@ -72,7 +70,7 @@ export async function PATCH(request: NextRequest, { params }: Params) {
       );
     }
 
-    const dataToUpdate: { [key: string]: any } = {};
+    const dataToUpdate: Record<string, unknown> = {};
 
     // Champs éditables
     if (body.nom !== undefined) dataToUpdate.nom = body.nom;
@@ -138,7 +136,8 @@ export async function DELETE(req: NextRequest, { params }: Params) {
       message: "Utilisateur et toutes ses relations supprimées",
       data: deletedUser,
     });
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 400 });
+  } catch (error: unknown) {
+    const err = error as Error;
+    return NextResponse.json({ error: err.message }, { status: 400 });
   }
 }

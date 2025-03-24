@@ -1,8 +1,5 @@
 import { NextResponse, NextRequest } from "next/server";
 import prisma from "@/lib/prisma";
-const headers = {
-  "Content-Type": "application/json",
-};
 
 export async function GET(
   req: NextRequest,
@@ -17,20 +14,8 @@ export async function GET(
       { success: true, mesCommentaires },
       { status: 201 }
     );
-  } catch (error: any) {
-    return new Response(JSON.stringify({ error: error.message }), {
-      status: 400,
-      headers,
-    });
+  } catch (error: unknown) {
+    const err = error as Error;
+    return NextResponse.json({ error: err.message }, { status: 400 });
   }
 }
-
-// export async function POST() {
-//     try {
-//     } catch (error: any) {
-//       return new Response(JSON.stringify({ error: error.message }), {
-//         status: 400,
-//         headers,
-//       });
-//     }
-//   }

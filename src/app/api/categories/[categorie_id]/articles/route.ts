@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getServerSession } from "next-auth/next";
@@ -44,7 +44,12 @@ export async function POST(req: NextRequest) {
         categorie_id,
       },
     });
-    return NextResponse.json({ success: true, article }/* eslint-disable @typescript-eslint/no-explicit-any */);
+    return NextResponse.json(
+      {
+        success: true,
+        article,
+      } /* eslint-disable @typescript-eslint/no-explicit-any */
+    );
   } catch (error: any) {
     return new Response(JSON.stringify({ error: error.message }), {
       status: 400,
@@ -72,7 +77,8 @@ export async function GET(
       },
     });
     return NextResponse.json({ success: true, articles }, { status: 200 });
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 400 });
+  } catch (error: unknown) {
+    const err = error as Error;
+    return NextResponse.json({ error: err.message }, { status: 400 });
   }
 }

@@ -25,10 +25,8 @@ export async function GET(
     }
 
     return NextResponse.json(MaCatégorie, { headers });
-  } catch (error: any) {
-    return NextResponse.json(
-      { error: error.message },
-      { status: 400, headers }
-    );
+  } catch (error: unknown) {
+    const err = error as Error;
+    return NextResponse.json({ error: err.message }, { status: 400 });
   }
 }

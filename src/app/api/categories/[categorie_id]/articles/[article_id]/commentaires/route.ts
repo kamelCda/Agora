@@ -3,10 +3,6 @@ import prisma from "@/lib/prisma";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth"; // Adjust the path if needed
 
-const headers = {
-  "Content-Type": "application/json",
-};
-
 export async function POST(
   req: NextRequest,
   { params }: { params: { article_id: string } }
@@ -44,11 +40,9 @@ export async function POST(
       },
     });
     return NextResponse.json({ success: true, commentaire }, { status: 201 });
-  } catch (error: any) {
-    return new Response(JSON.stringify({ error: error.message }), {
-      status: 400,
-      headers,
-    });
+  } catch (error: unknown) {
+    const err = error as Error;
+    return NextResponse.json({ error: err.message }, { status: 400 });
   }
 }
 
@@ -64,10 +58,8 @@ export async function GET(
       orderBy: { upvotes: { _count: "desc" } },
     });
     return NextResponse.json({ success: true, commentaires }, { status: 200 });
-  } catch (error: any) {
-    return new Response(JSON.stringify({ error: error.message }), {
-      status: 400,
-      headers,
-    });
+  } catch (error: unknown) {
+    const err = error as Error;
+    return NextResponse.json({ error: err.message }, { status: 400 });
   }
 }

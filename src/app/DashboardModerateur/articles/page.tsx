@@ -35,7 +35,7 @@ const PageArticleModerateur = () => {
   const { data: session, status } = useSession();
   const router = useRouter();
 
-  // 1) Vérification de la session et du rôle ADMIN
+  // 1) Vérification de la session et du rôle moderateur
   useEffect(() => {
     if (status === "loading") return;
     if (!session) {
