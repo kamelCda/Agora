@@ -49,10 +49,7 @@ export async function DELETE(req: NextRequest) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
-  const commentaire_id = extractParamFromUrl(
-    req.nextUrl.pathname,
-    "commentaire_id"
-  );
+  const commentaire_id = extractParamFromUrl(req.nextUrl.pathname);
   if (!commentaire_id) {
     return NextResponse.json({ error: "Paramètre manquant" }, { status: 400 });
   }
@@ -85,10 +82,7 @@ export async function PUT(req: NextRequest) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
-  const commentaire_id = extractParamFromUrl(
-    req.nextUrl.pathname,
-    "commentaire_id"
-  );
+  const commentaire_id = extractParamFromUrl(req.nextUrl.pathname);
   if (!commentaire_id) {
     return NextResponse.json({ error: "Paramètre manquant" }, { status: 400 });
   }

@@ -1,4 +1,3 @@
-
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getServerSession } from "next-auth/next";
@@ -8,8 +7,13 @@ const headers = {
   "Content-Type": "application/json",
 };
 
+// Utilitaire pour extraire categorie_id depuis l'URL
+function extractCategorieId(pathname: string): string | null {
+  const match = pathname.match(/\/categories\/([^/]+)\/articles/);
+  return match ? match[1] : null;
+}
+
 export async function POST(req: NextRequest) {
-  // Check for an active session
   const session = await getServerSession(authOptions);
   if (!session) {
     return NextResponse.json(
@@ -18,8 +22,6 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  // Ensure the user has the required role(s)
-  // Assumes session.user.role is an array of roles.
   if (
     !session.user.role ||
     (!session.user.role.includes("ADMINISTRATEUR") &&
@@ -44,25 +46,24 @@ export async function POST(req: NextRequest) {
         categorie_id,
       },
     });
-    return NextResponse.json(
-      {
-        success: true,
-        article,
-      } /* eslint-disable @typescript-eslint/no-explicit-any */
-    );
-  } catch (error: any) {
-    return new Response(JSON.stringify({ error: error.message }), {
+
+    return NextResponse.json({ success: true, article });
+  } catch (error: unknown) {
+    return new Response(JSON.stringify({ error: (error as Error).message }), {
       status: 400,
       headers,
     });
   }
 }
 
-export async function GET(
-  req: Request,
-  { params }: { params: { categorie_id: string } }
-) {
-  const { categorie_id } = params;
+export async function GET(req: NextRequest) {
+  const categorie_id = extractCategorieId(req.nextUrl.pathname);
+  if (!categorie_id) {
+    return NextResponse.json(
+      { error: "categorie_id introuvable" },
+      { status: 400 }
+    );
+  }
 
   try {
     const articles = await prisma.article.findMany({
@@ -76,9 +77,12 @@ export async function GET(
         },
       },
     });
+
     return NextResponse.json({ success: true, articles }, { status: 200 });
   } catch (error: unknown) {
-    const err = error as Error;
-    return NextResponse.json({ error: err.message }, { status: 400 });
+    return NextResponse.json(
+      { error: (error as Error).message },
+      { status: 400 }
+    );
   }
 }

@@ -3,14 +3,28 @@ import prisma from "@/lib/prisma";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 
-interface Params {
-  params: {
-    article_id: string;
-  };
+// Helper: extraire article_id de l'URL
+function extractArticleId(pathname: string): string | null {
+  const match = pathname.match(/\/articles\/([^/]+)/);
+  return match ? match[1] : null;
 }
 
-export async function GET(req: NextRequest, { params }: Params) {
-  const { article_id } = params;
+// Permissions
+function hasPermission(role: string[] | undefined) {
+  return (
+    role && (role.includes("ADMINISTRATEUR") || role.includes("MODERATEUR"))
+  );
+}
+
+export async function GET(req: NextRequest) {
+  const article_id = extractArticleId(req.nextUrl.pathname);
+  if (!article_id) {
+    return NextResponse.json(
+      { error: "article_id introuvable" },
+      { status: 400 }
+    );
+  }
+
   try {
     const article = await prisma.article.findUnique({
       where: { id_article: article_id },
@@ -23,22 +37,16 @@ export async function GET(req: NextRequest, { params }: Params) {
         },
       },
     });
-    return NextResponse.json({ success: true, article }, { status: 201 });
+    return NextResponse.json({ success: true, article }, { status: 200 });
   } catch (error: unknown) {
-    const err = error as Error;
-    return NextResponse.json({ error: err.message }, { status: 400 });
+    return NextResponse.json(
+      { error: (error as Error).message },
+      { status: 400 }
+    );
   }
 }
 
-// Helper function to check permissions using the "role" property
-function hasPermission(role: string[] | undefined) {
-  return (
-    role && (role.includes("ADMINISTRATEUR") || role.includes("MODERATEUR"))
-  );
-}
-
-export async function DELETE(req: NextRequest, { params }: Params) {
-  // Session check
+export async function DELETE(req: NextRequest) {
   const session = await getServerSession(authOptions);
   if (!session) {
     return NextResponse.json(
@@ -46,7 +54,7 @@ export async function DELETE(req: NextRequest, { params }: Params) {
       { status: 401 }
     );
   }
-  // Role check: Only allow ADMINISTRATEUR or MODERATEUR
+
   if (!hasPermission(session.user.role)) {
     return NextResponse.json(
       { error: "Forbidden: Insufficient permissions" },
@@ -54,23 +62,31 @@ export async function DELETE(req: NextRequest, { params }: Params) {
     );
   }
 
-  const { article_id } = params;
+  const article_id = extractArticleId(req.nextUrl.pathname);
+  if (!article_id) {
+    return NextResponse.json(
+      { error: "article_id introuvable" },
+      { status: 400 }
+    );
+  }
+
   try {
     const article = await prisma.article.delete({
       where: { id_article: article_id },
     });
     return NextResponse.json(
       { success: true, "article supprimé": article },
-      { status: 201 }
+      { status: 200 }
     );
   } catch (error: unknown) {
-    const err = error as Error;
-    return NextResponse.json({ error: err.message }, { status: 400 });
+    return NextResponse.json(
+      { error: (error as Error).message },
+      { status: 400 }
+    );
   }
 }
 
-export async function PUT(req: NextRequest, { params }: Params) {
-  // Session check
+export async function PUT(req: NextRequest) {
   const session = await getServerSession(authOptions);
   if (!session) {
     return NextResponse.json(
@@ -78,7 +94,7 @@ export async function PUT(req: NextRequest, { params }: Params) {
       { status: 401 }
     );
   }
-  // Role check: Only allow ADMINISTRATEUR or MODERATEUR
+
   if (!hasPermission(session.user.role)) {
     return NextResponse.json(
       { error: "Forbidden: Insufficient permissions" },
@@ -86,8 +102,16 @@ export async function PUT(req: NextRequest, { params }: Params) {
     );
   }
 
-  const { article_id } = params;
+  const article_id = extractArticleId(req.nextUrl.pathname);
+  if (!article_id) {
+    return NextResponse.json(
+      { error: "article_id introuvable" },
+      { status: 400 }
+    );
+  }
+
   const { titre, contenu, miseAjourLe, utilisateur_id } = await req.json();
+
   try {
     const article = await prisma.article.update({
       where: { id_article: article_id },
@@ -100,10 +124,12 @@ export async function PUT(req: NextRequest, { params }: Params) {
     });
     return NextResponse.json(
       { success: true, "article modifié": article },
-      { status: 201 }
+      { status: 200 }
     );
   } catch (error: unknown) {
-    const err = error as Error;
-    return NextResponse.json({ error: err.message }, { status: 400 });
+    return NextResponse.json(
+      { error: (error as Error).message },
+      { status: 400 }
+    );
   }
 }

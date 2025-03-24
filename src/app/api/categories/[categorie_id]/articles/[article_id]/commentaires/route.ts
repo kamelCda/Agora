@@ -1,13 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/lib/auth"; // Adjust the path if needed
+import { authOptions } from "@/lib/auth";
 
-export async function POST(
-  req: NextRequest,
-  { params }: { params: { article_id: string } }
-) {
-  // For App Router (Next.js 15 with app directory), call getServerSession with only authOptions.
+function extractArticleId(pathname: string): string | null {
+  const match = pathname.match(/\/articles\/([^/]+)\/commentaires/);
+  return match ? match[1] : null;
+}
+
+export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions);
   if (!session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -18,48 +19,51 @@ export async function POST(
     !userRoles.some((role) => ["ADMINISTRATEUR", "MODERATEUR"].includes(role))
   ) {
     return NextResponse.json(
-      { error: "interdit: vous n'etes pas autorisé a poster un commentaire" },
+      { error: "interdit: vous n'etes pas autorisé à poster un commentaire" },
       { status: 403 }
     );
   }
 
+  const article_id = extractArticleId(req.nextUrl.pathname);
+  if (!article_id) {
+    return NextResponse.json({ error: "article_id introuvable dans l'URL" }, { status: 400 });
+  }
+
   try {
-    // Extract contenu and optionally creeLe from the body. Article id comes from the URL parameters.
     const { contenu, creeLe } = await req.json();
     const commentaire = await prisma.commentaire.create({
       data: {
         contenu,
-        creeLe: creeLe || new Date(), // Use server-generated timestamp if not provided
+        creeLe: creeLe || new Date(),
         utilisateur: {
           connect: { id_utilisateur: session.user.id_utilisateur },
         },
-        article: { connect: { id_article: params.article_id } },
+        article: { connect: { id_article: article_id } },
       },
-      include: {
-        upvotes: true, // Ensure the upvotes relation is included (even if empty)
-      },
+      include: { upvotes: true },
     });
+
     return NextResponse.json({ success: true, commentaire }, { status: 201 });
   } catch (error: unknown) {
-    const err = error as Error;
-    return NextResponse.json({ error: err.message }, { status: 400 });
+    return NextResponse.json({ error: (error as Error).message }, { status: 400 });
   }
 }
 
-export async function GET(
-  req: Request,
-  { params }: { params: { article_id: string } }
-) {
-  const { article_id } = params;
+export async function GET(req: NextRequest) {
+  const article_id = extractArticleId(req.nextUrl.pathname);
+  if (!article_id) {
+    return NextResponse.json({ error: "article_id introuvable dans l'URL" }, { status: 400 });
+  }
+
   try {
     const commentaires = await prisma.commentaire.findMany({
       where: { article_id },
       include: { upvotes: true },
       orderBy: { upvotes: { _count: "desc" } },
     });
+
     return NextResponse.json({ success: true, commentaires }, { status: 200 });
   } catch (error: unknown) {
-    const err = error as Error;
-    return NextResponse.json({ error: err.message }, { status: 400 });
+    return NextResponse.json({ error: (error as Error).message }, { status: 400 });
   }
 }
