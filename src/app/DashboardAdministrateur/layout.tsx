@@ -3,10 +3,10 @@
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
-import Header from "@/components/layout/header";
-import Sidebar from "@/components/layout/sidebar";
-import { Card } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
+import Header from "@/app/components/layout/header";
+import Sidebar from "@/app/components/layout/sidebar";
+import { Card } from "@/app/components/ui/card";
+import { Skeleton } from "@/app/components/ui/skeleton";
 
 export default function DashboardLayout({
   children,
@@ -44,14 +44,14 @@ export default function DashboardLayout({
   }
 
   return (
-    <div className="flex h-screen w-[90%] mx-auto">
-      <Sidebar />
-      <div className="flex-1 flex flex-col">
-        <Header />
-        <main className="p-4 bg-muted flex-1">
-          <Card className="p-4">{children}</Card>
-        </main>
+      <div className="flex h-screen w-[60%] mx-auto">
+        <Sidebar />
+        <div className="flex-1 flex flex-col">
+          <Header />
+          <main className="p-4 bg-muted flex-1">
+            <Card className="p-4">{children}</Card>
+          </main>
+        </div>
       </div>
-    </div>
-  );
+    );
 }

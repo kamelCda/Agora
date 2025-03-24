@@ -45,7 +45,7 @@ export function useCategories() {
       });
       if (!res.ok) throw new Error("Failed to add category");
       const data = await res.json();
-      // Extract the actual category object
+      //extrait l'objet actuel
       const createdCategory = data.categorie;
 
       setCategories((prevCategories) => [...prevCategories, createdCategory]);

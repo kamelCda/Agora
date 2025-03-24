@@ -1,60 +1,40 @@
 import { useState, useEffect } from "react";
 
 export interface User {
-  id: string;
+  id_utilisateur: string;
+  nomUtilisateur: string;
+  banni: boolean;
 }
-/**
- * Hook permettant la récupération des utilisateurs et la gestion
- * du bannissement (sans suppression).
- * Utilisable par un modérateur.
- */
-export function useUsers() {
-  const [users, setUsers] = useState<User[]>([]);
 
-  // Récupération initiale de la liste des utilisateurs
+export function useUsersBannis() {
+  const [users, setUsers] = useState<User[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
   useEffect(() => {
-    fetch("/api/utilisateurs")
+    fetch("/api/utilisateurs/bannis")
       .then((response) => {
         if (!response.ok) {
-          throw new Error("Erreur lors de la récupération des utilisateurs");
+          throw new Error(
+            "Erreur lors de la récupération des utilisateurs bannis"
+          );
         }
         return response.json();
       })
-      .then((data) => setUsers(data))
-      .catch((error) => {
+      .then((data) => {
+        if (Array.isArray(data)) {
+          setUsers(data);
+        } else {
+          throw new Error("Les données reçues ne sont pas un tableau.");
+        }
+      })
+      .catch((error: any) => {
         console.error(error);
-      });
+        setError(error.message);
+        setUsers([]);
+      })
+      .finally(() => setLoading(false));
   }, []);
 
-  /**
-   * Bannis un utilisateur sans le supprimer
-   */
-  const banUser = async (userId: string) => {
-    try {
-      const response = await fetch(`/api/utilisateurs/${userId}/bannis`, {
-        method: "POST", // ou PUT selon votre API
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error("Impossible de bannir l’utilisateur");
-      }
-
-      // Met à jour l’état local : on modifie le champ 'isBanned' dans la liste
-      setUsers((prevUsers) =>
-        prevUsers.map((user) =>
-          user.id === userId ? { ...user, isBanned: true } : user
-        )
-      );
-    } catch (error) {
-      console.error(error);
-    }
-  };
-
-  return {
-    users,
-    banUser,
-  };
+  return { users, loading, error };
 }

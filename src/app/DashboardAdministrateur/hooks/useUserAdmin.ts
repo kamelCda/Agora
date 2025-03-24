@@ -1,33 +1,53 @@
-import { useState } from "react";
-import { useUsers } from "./useUsers";
-import { User } from "next-auth";
+import { useState, useEffect } from "react";
+import {
+  useUsersBannis,
+  User,
+} from "@/app/DashboardAdministrateur/hooks/useUsers";
+
 /**
- * Hook Admin qui étend les fonctionnalités de useUsers :
+ * Hook Admin qui étend les fonctionnalités de useUsersBannis :
  * possibilité de bannir ET de supprimer un utilisateur.
  */
 export function useUsersAdmin() {
-  // On réutilise la logique du hook de base (useUsers)
-  // afin d'avoir la liste des users et la méthode banUser.
-  const { users, banUser } = useUsers();
+  const { users: initialUsers, loading, error } = useUsersBannis();
+  const [users, setUsers] = useState<User[]>(initialUsers);
 
-  // Dans ce cas précis, on a besoin d'accéder et de mettre à jour
-  // la liste users localement, donc on la copie dans un état interne:
-  // (optionnel : on peut aussi modifier le hook useUsers
-  // pour exposer setUsers si besoin)
-  const [localUsers, setLocalUsers] = useState(users);
-
-  // Met à jour localUsers si users change dans useUsers
-  // (ex: après un bannissement)
-  if (localUsers !== users) {
-    setLocalUsers(users);
-  }
+  // Synchroniser l'état local avec l'état initial provenant du hook
+  useEffect(() => {
+    setUsers(initialUsers);
+  }, [initialUsers]);
 
   /**
-   * Supprime un utilisateur (ban + suppression définitive)
+   * Bannis un utilisateur sans le supprimer
    */
-  const deleteUser = async (userId:string) => {
+  const banUser = async (userId: string) => {
     try {
-      const response = await fetch(`/api/users/${userId}`, {
+      const response = await fetch(`/api/utilisateurs/${userId}/banni`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+      });
+
+      if (!response.ok) {
+        throw new Error("Impossible de bannir l’utilisateur");
+      }
+
+      setUsers((prevUsers) =>
+        prevUsers.map((user) =>
+          user.id_utilisateur === userId ? { ...user, banni: true } : user
+        )
+      );
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (error: any) {
+      console.error(error);
+    }
+  };
+
+  /**
+   * Supprime un utilisateur définitivement
+   */
+  const deleteUser = async (userId: string) => {
+    try {
+      const response = await fetch(`/api/utilisateurs/${userId}`, {
         method: "DELETE",
       });
 
@@ -35,18 +55,14 @@ export function useUsersAdmin() {
         throw new Error("Impossible de supprimer l’utilisateur");
       }
 
-      // Met à jour l’état local pour refléter la suppression
-      setLocalUsers((prevUsers) =>
-        prevUsers.filter((user) => user.id !== userId)
+      setUsers((prevUsers) =>
+        prevUsers.filter((user) => user.id_utilisateur !== userId)
       );
-    } catch (error) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (error: any) {
       console.error(error);
     }
   };
 
-  return {
-    users: localUsers,
-    banUser,
-    deleteUser,
-  };
+  return { users, loading, error, banUser, deleteUser };
 }

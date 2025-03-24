@@ -1,5 +1,6 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import prisma from "@/lib/prisma";
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import bcrypt from "bcrypt";
 const headers = {
   "Content-Type": "application/json",
@@ -7,7 +8,6 @@ const headers = {
 
 export async function POST(req: Request) {
   try {
-    
     const {
       nom,
       prenom,
@@ -17,8 +17,8 @@ export async function POST(req: Request) {
       motDePasse,
       ville,
       nomUtilisateur,
-      description,
-      nomRole, //
+      //description,
+      nomRole = "UTILISATEUR",
     } = await req.json();
 
     // 1. Validation des champs ...
@@ -58,7 +58,7 @@ export async function POST(req: Request) {
         ville,
         nomUtilisateur,
         motDePasse: hashedPassword,
-        role_id: roleUtilisateur.id_role,
+        // role_id: roleUtilisateur.id_role,
         affectations: {
           create: [
             {
@@ -68,7 +68,7 @@ export async function POST(req: Request) {
         },
       },
       include: {
-        role: true,
+        // role: true,
         affectations: { include: { role: true } },
       },
     });
@@ -88,7 +88,7 @@ export async function GET() {
   try {
     const utilisateurs = await prisma.utilisateur.findMany({
       include: {
-        role: true, // Direct role if you have a role_id on utilisateur
+        // role: true, // Direct role if you have a role_id on utilisateur
         affectations: {
           include: {
             role: true, // Includes the role record tied to each affectation

@@ -4,10 +4,10 @@
 import React from "react";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import "@testing-library/jest-dom";
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, Mock } from "vitest";
 import CategorieAdminPage from "@/app/DashboardAdministrateur/categories/page";
 import { useCategories } from "@/app/DashboardAdministrateur/hooks/useCategories";
-
+const push = vi.fn();
 // Mock du hook useCategories
 vi.mock("@/app/DashboardAdministrateur/hooks/useCategories", () => ({
   useCategories: vi.fn(),
@@ -19,7 +19,7 @@ describe("CategorieAdminPage", () => {
   });
 
   it("affiche les catégories filtrées par le terme de recherche", () => {
-    (useCategories as vi.Mock).mockReturnValue({
+    (useCategories as Mock).mockReturnValue({
       categories: [
         { id_categorie: "1", nomCategorie: "sql" },
         { id_categorie: "2", nomCategorie: "javascript" },
@@ -35,7 +35,7 @@ describe("CategorieAdminPage", () => {
 
     const searchInput = screen.getByPlaceholderText("Search categories...");
 
-    fireEvent.change(searchInput, { target: { value: "Sci" } });
+    fireEvent.change(searchInput, { target: { value: "sql" } });
 
     expect(screen.getByText("sql")).toBeInTheDocument();
     expect(screen.queryByText("javascript")).not.toBeInTheDocument();
@@ -45,7 +45,7 @@ describe("CategorieAdminPage", () => {
   it("ajoute une nouvelle catégorie lorsqu'on clique sur 'Add'", async () => {
     const addCategoryMock = vi.fn();
 
-    (useCategories as vi.Mock).mockReturnValue({
+    (useCategories as Mock).mockReturnValue({
       categories: [],
       loading: false,
       error: null,
@@ -69,7 +69,7 @@ describe("CategorieAdminPage", () => {
   it("supprime une catégorie lorsqu'on clique sur 'Delete'", async () => {
     const deleteCategoryMock = vi.fn();
 
-    (useCategories as vi.Mock).mockReturnValue({
+    (useCategories as Mock).mockReturnValue({
       categories: [{ id_categorie: "1", nomCategorie: "Tech" }],
       loading: false,
       error: null,
@@ -88,7 +88,7 @@ describe("CategorieAdminPage", () => {
   });
 
   it("affiche un message d'erreur si le hook renvoie une erreur", () => {
-    (useCategories as vi.Mock).mockReturnValue({
+    (useCategories as Mock).mockReturnValue({
       categories: [],
       loading: false,
       error: "Erreur de chargement",
@@ -101,7 +101,7 @@ describe("CategorieAdminPage", () => {
   });
 
   it("affiche un indicateur de chargement lorsqu'en cours de chargement", () => {
-    (useCategories as vi.Mock).mockReturnValue({
+    (useCategories as Mock).mockReturnValue({
       categories: [],
       loading: true,
       error: null,

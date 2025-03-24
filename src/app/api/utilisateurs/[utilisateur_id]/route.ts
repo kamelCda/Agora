@@ -1,4 +1,4 @@
-import { PrismaClient } from "@prisma/client";
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 const headers = {
   "Content-Type": "application/json",
@@ -15,7 +15,10 @@ interface Params {
 }
 
 // GET : Récupération de l'utilisateur avec ses relations
-export async function GET(req: NextRequest, { params }: Params) {
+export async function GET(
+  req: NextRequest,
+  { params }: { params: { utilisateur_id: string } }
+) {
   const { utilisateur_id } = params;
 
   if (!utilisateur_id) {
@@ -25,7 +28,7 @@ export async function GET(req: NextRequest, { params }: Params) {
   try {
     const utilisateur = await prisma.utilisateur.findUnique({
       where: { id_utilisateur: utilisateur_id },
-      include: { role: true ,commentaires:true},
+      include: { /*role: true,*/ commentaires: true },
     });
 
     if (!utilisateur) {
@@ -35,7 +38,10 @@ export async function GET(req: NextRequest, { params }: Params) {
       );
     }
 
-    return NextResponse.json({ success: true, data: utilisateur });
+    return NextResponse.json(
+      { success: true, data: utilisateur },
+      { status: 200, headers }
+    );
   } catch (error) {
     console.error("Erreur lors de la récupération de l'utilisateur :", error);
     return NextResponse.json(
@@ -45,22 +51,20 @@ export async function GET(req: NextRequest, { params }: Params) {
   }
 }
 
-// PATCH : Mise à jour des champs de l'utilisateur
 export async function PATCH(request: NextRequest, { params }: Params) {
   const { utilisateur_id } = params;
 
   if (!utilisateur_id) {
-    return NextResponse.json({ error: "ID is required" }, { status: 400 });
+    return NextResponse.json({ error: "ID requis" }, { status: 400 });
   }
 
   try {
-    // Lecture du body JSON envoyé par le client
     const body = await request.json();
 
-    // Vérification que l'utilisateur existe
     const existingUser = await prisma.utilisateur.findUnique({
       where: { id_utilisateur: utilisateur_id },
     });
+
     if (!existingUser) {
       return NextResponse.json(
         { error: "Utilisateur non trouvé" },
@@ -68,40 +72,46 @@ export async function PATCH(request: NextRequest, { params }: Params) {
       );
     }
 
-    // Construction d'un objet contenant uniquement les champs à mettre à jour
     const dataToUpdate: { [key: string]: any } = {};
 
+    // Champs éditables
     if (body.nom !== undefined) dataToUpdate.nom = body.nom;
     if (body.prenom !== undefined) dataToUpdate.prenom = body.prenom;
     if (body.adresse !== undefined) dataToUpdate.adresse = body.adresse;
     if (body.telephone !== undefined) dataToUpdate.telephone = body.telephone;
     if (body.email !== undefined) dataToUpdate.email = body.email;
     if (body.ville !== undefined) dataToUpdate.ville = body.ville;
-    if (body.classe !== undefined) dataToUpdate.classe = body.classe;
-    if (body.debutFormation !== undefined)
-      dataToUpdate.debutFormation = new Date(body.debutFormation);
-    if (body.finFormation !== undefined)
-      dataToUpdate.finFormation = new Date(body.finFormation);
+    if (body.image !== undefined) dataToUpdate.image = body.image;
+    if (body.nomUtilisateur !== undefined)
+      dataToUpdate.nomUtilisateur = body.nomUtilisateur;
+    if (body.banni !== undefined) dataToUpdate.banni = body.banni;
+    if (body.description !== undefined)
+      dataToUpdate.description = body.description;
 
-    // Si un nouveau mot de passe est fourni, on le hache avant mise à jour
+    // Hachage du mot de passe si fourni
     if (body.motDePasse !== undefined) {
       const salt = await bcrypt.genSalt(10);
       dataToUpdate.motDePasse = await bcrypt.hash(body.motDePasse, salt);
     }
 
-    // Mettre à jour le timestamp de modification
-    dataToUpdate.modifieLe = new Date();
+    if (Object.keys(dataToUpdate).length === 0) {
+      return NextResponse.json(
+        { success: false, error: "Aucune donnée à mettre à jour." },
+        { status: 400 }
+      );
+    }
 
-    // Mise à jour de l'utilisateur avec retour des relations identiques au GET
     const updatedUtilisateur = await prisma.utilisateur.update({
       where: { id_utilisateur: utilisateur_id },
       data: dataToUpdate,
-      include: {},
+      include: {
+        commentaires: true, // ou d'autres relations utiles
+      },
     });
 
     return NextResponse.json({ success: true, data: updatedUtilisateur });
   } catch (error) {
-    console.error("Erreur dans PATCH settings:", error);
+    console.error("Erreur lors de la mise à jour de l'utilisateur:", error);
     return NextResponse.json(
       { success: false, error: "Erreur lors de la mise à jour" },
       { status: 500 }
@@ -128,19 +138,7 @@ export async function DELETE(req: NextRequest, { params }: Params) {
       message: "Utilisateur et toutes ses relations supprimées",
       data: deletedUser,
     });
-  } catch (error: unknown) {
-    console.error("Erreur lors de la suppression :", error);
-    let errorMessage = "Erreur lors de la suppression";
-
-    if (error instanceof Error) {
-      errorMessage = error.message;
-    }
-    return NextResponse.json(
-      {
-        success: false,
-        error: errorMessage || "Erreur lors de la suppression",
-      },
-      { status: 500 }
-    );
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message }, { status: 400 });
   }
 }

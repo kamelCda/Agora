@@ -1,9 +1,9 @@
-"use client"
+"use client";
 import React, { useState } from "react";
 import { useCategories } from "@/app/DashboardAdministrateur/hooks/useCategories";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Button } from "@/app/components/ui/button";
+import { Input } from "@/app/components/ui/input";
+import { Card, CardContent, CardHeader } from "@/app/components/ui/card";
 
 export default function CategorieAdminPage() {
   const { categories, loading, error, addCategory, deleteCategory } =
@@ -55,7 +55,10 @@ export default function CategorieAdminPage() {
           ) : (
             <ul className="space-y-2">
               {filteredCategories.map((category) => (
-                <li key={category.id_categorie} className="flex justify-between">
+                <li
+                  key={category.id_categorie}
+                  className="flex justify-between"
+                >
                   <span>{category.nomCategorie}</span>
                   <Button
                     onClick={() => deleteCategory(category.id_categorie)}

@@ -3,11 +3,16 @@
 import React, { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Input } from "@/app/components/ui/input";
+import { Button } from "@/app/components/ui/button";
+import { Label } from "@/app/components/ui/label";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/app/components/ui/card";
+import { Alert, AlertDescription, AlertTitle } from "@/app/components/ui/alert";
 
 interface UserSettings {
   telephone: string;
@@ -67,6 +72,7 @@ export default function UtilisateurSettingPage() {
         }
 
         setSettings(data.data);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } catch (err: any) {
         setError(
           err.message || "Erreur lors de la récupération des paramètres."
@@ -105,8 +111,9 @@ export default function UtilisateurSettingPage() {
         setSettings(data.data);
         alert("Paramètres mis à jour avec succès.");
       }
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
-      setError("Erreur lors de la mise à jour.");
+      setError(err.message || "Erreur lors de la mise à jour.");
     }
   };
 

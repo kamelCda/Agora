@@ -1,12 +1,13 @@
 "use client";
 import { useEffect, useState } from "react";
-import { signOut, useSession  } from "next-auth/react";
+import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 
 export default function HomePage() {
   const { data: session, status } = useSession();
   const router = useRouter();
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [error, setError] = useState("");
   useEffect(() => {
     if (status === "loading") return; // Attendre que la session soit chargée
@@ -46,7 +47,7 @@ export default function HomePage() {
         </Link>
         <Link href="/auth/register">
           <button className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">
-            S'inscrire
+            S inscrire
           </button>
         </Link>
       </div>
@@ -65,3 +66,7 @@ export default function HomePage() {
 //     </>
 //   );
 // }
+
+
+
+

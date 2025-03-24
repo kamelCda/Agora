@@ -4,9 +4,14 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { signIn, useSession } from "next-auth/react";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/app/components/ui/input";
+import { Button } from "@/app/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/app/components/ui/card";
 
 const LoginPage = () => {
   const router = useRouter();
@@ -15,10 +20,9 @@ const LoginPage = () => {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
 
+  // Toujours appeler les hooks AVANT tout return conditionnel
   useEffect(() => {
-    if (status === "loading") return; // Attendre que la session soit chargée
     if (session) {
-      // Rediriger en fonction du rôle
       const roles = session.user.role;
       if (roles.includes("ADMINISTRATEUR")) {
         router.push("/DashboardAdministrateur");
@@ -30,7 +34,7 @@ const LoginPage = () => {
         setError("Utilisateur non reconnu");
       }
     }
-  }, [session, status, router]);
+  }, [session, router]);
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -47,6 +51,11 @@ const LoginPage = () => {
     }
   };
 
+  // On affiche un écran de chargement si la session est en cours de chargement
+  if (status === "loading") {
+    return <div className="text-center mt-10">Chargement...</div>;
+  }
+
   return (
     <div className="flex items-center justify-center min-h-screen">
       <Card className="w-96">
@@ -56,8 +65,9 @@ const LoginPage = () => {
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label>Email :</label>
+              <label htmlFor="email">Email :</label>
               <Input
+                id="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 type="email"
@@ -65,8 +75,9 @@ const LoginPage = () => {
               />
             </div>
             <div>
-              <label>Mot de passe :</label>
+              <label htmlFor="password">Mot de passe :</label>
               <Input
+                id="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 type="password"
@@ -84,7 +95,7 @@ const LoginPage = () => {
               href="/auth/register"
               className="text-blue-600 hover:underline"
             >
-              S'inscrire
+              Sinscrire
             </Link>
           </p>
         </CardContent>
@@ -94,3 +105,4 @@ const LoginPage = () => {
 };
 
 export default LoginPage;
+

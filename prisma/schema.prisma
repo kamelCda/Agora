@@ -13,23 +13,21 @@ generator client {
 }
 
 model Utilisateur {
-  id_utilisateur String   @id @default(cuid())
-  nom            String
-  prenom         String
+  id_utilisateur String    @id @default(cuid())
+  nom            String?
+  prenom         String?
   adresse        String?
-  telephone      String?  @db.VarChar(14)
-  email          String   @unique
+  telephone      String?   @db.VarChar(14)
+  email          String    @unique
   motDePasse     String
   ville          String?
   image          String?
-  creeLe         DateTime @default(now())
-  miseAjourLe    DateTime @updatedAt
-  nomUtilisateur String   @unique
-  banni          Boolean  @default(false)
+  creeLe         DateTime  @default(now())
+  miseAjourLe    DateTime? @updatedAt
+  nomUtilisateur String?   @unique
+  banni          Boolean   @default(false)
   description    String?
 
-  role_id String
-  role    Role?  @relation(fields: [role_id], references: [id_role])
 
   categories    Categorie[]
   articles      Article[]
@@ -39,6 +37,8 @@ model Utilisateur {
   abonnements   AbonnementReseauSocial[]
   affectations  AffectationRole[]
   upvotes       Upvote[]
+  Role          Role?                    @relation(fields: [roleId_role], references: [id_role])
+  roleId_role   String?
 }
 
 model Role {
@@ -52,7 +52,7 @@ model Categorie {
   id_categorie   String      @id @default(cuid())
   nomCategorie   String      @unique
   utilisateur_id String
-  utilisateur    Utilisateur @relation(fields: [utilisateur_id], references: [id_utilisateur])
+  utilisateur    Utilisateur @relation(fields: [utilisateur_id], references: [id_utilisateur], onDelete: Cascade)
   articles       Article[]
 }
 
@@ -88,13 +88,15 @@ model Commentaire {
 
 model Evaluation {
   id_evaluation String   @id @default(cuid())
-  valeur        Int      @default(1) @db.Integer
+  valeur        Int      @default(0) @db.Integer
   creeLe        DateTime @default(now())
 
   utilisateur_id String
   article_id     String
-  utilisateur    Utilisateur @relation(fields: [utilisateur_id], references: [id_utilisateur])
+  utilisateur    Utilisateur @relation(fields: [utilisateur_id], references: [id_utilisateur], onDelete: Cascade)
   article        Article     @relation(fields: [article_id], references: [id_article], onDelete: Cascade)
+
+  @@unique([utilisateur_id, article_id]) // Contrainte d'unicité
 }
 
 model Notification {
@@ -105,7 +107,7 @@ model Notification {
   creeLe          DateTime @default(now())
 
   utilisateur_id String
-  utilisateur    Utilisateur @relation(fields: [utilisateur_id], references: [id_utilisateur])
+  utilisateur    Utilisateur @relation(fields: [utilisateur_id], references: [id_utilisateur], onDelete: Cascade)
 }
 
 model ReseauSocial {
@@ -118,8 +120,8 @@ model ReseauSocial {
 model AbonnementReseauSocial {
   id_utilisateur  String
   id_reseauSocial String
-  utilisateur     Utilisateur  @relation(fields: [id_utilisateur], references: [id_utilisateur])
-  reseauSocial    ReseauSocial @relation(fields: [id_reseauSocial], references: [id_reseauSocial])
+  utilisateur     Utilisateur  @relation(fields: [id_utilisateur], references: [id_utilisateur], onDelete: Cascade)
+  reseauSocial    ReseauSocial @relation(fields: [id_reseauSocial], references: [id_reseauSocial], onDelete: Cascade)
 
   @@id([id_utilisateur, id_reseauSocial])
 }
@@ -127,8 +129,8 @@ model AbonnementReseauSocial {
 model AffectationRole {
   id_utilisateur String
   id_role        String
-  utilisateur    Utilisateur @relation(fields: [id_utilisateur], references: [id_utilisateur])
-  role           Role        @relation(fields: [id_role], references: [id_role])
+  utilisateur    Utilisateur @relation(fields: [id_utilisateur], references: [id_utilisateur], onDelete: Cascade)
+  role           Role        @relation(fields: [id_role], references: [id_role], onDelete: Cascade)
 
   @@id([id_utilisateur, id_role])
 }
@@ -140,8 +142,8 @@ model Upvote {
   utilisateur_id String
   commentaire_id String
 
-  utilisateur Utilisateur @relation(fields: [utilisateur_id], references: [id_utilisateur])
-  commentaire Commentaire @relation(fields: [commentaire_id], references: [id_commentaire])
+  utilisateur Utilisateur @relation(fields: [utilisateur_id], references: [id_utilisateur], onDelete: Cascade)
+  commentaire Commentaire @relation(fields: [commentaire_id], references: [id_commentaire], onDelete: Cascade)
 
   @@unique([utilisateur_id, commentaire_id]) // Empêche un utilisateur de voter plusieurs fois pour le même commentaire
 }

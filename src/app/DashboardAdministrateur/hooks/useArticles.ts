@@ -1,8 +1,5 @@
-
-
-
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 
 export interface Article {
   id_article: string;
@@ -20,17 +17,37 @@ export function useArticles() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Récupère les articles d'une catégorie donnée
+  // Nouveau state pour la moyenne
+  const [moyenneEvaluations, setMoyenneEvaluations] = useState<number | null>(
+    null
+  );
+
+  // Récupère les articles personnels d'une catégorie donnée
+  const fetchArticlesPerso = async (categoryId: string) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/categories/${categoryId}/mesArticles/`);
+      if (!res.ok) throw new Error("La récupération des articles a échoué");
+      const data = await res.json();
+      setArticles(data.mesarticles ?? data);
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "Une erreur inconnue est survenue"
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Récupère les articles  d'une catégorie donnée
   const fetchArticles = async (categoryId: string) => {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(`/api/categories/${categoryId}/articles`);
-      if (!res.ok) {
-        throw new Error("La récupération des articles a échoué");
-      }
+      const res = await fetch(`/api/categories/${categoryId}/articles/`);
+      if (!res.ok) throw new Error("La récupération des articles a échoué");
       const data = await res.json();
-      // On s'assure ici que la réponse contient bien les articles
       setArticles(data.articles ?? data);
     } catch (err) {
       setError(
@@ -41,24 +58,51 @@ export function useArticles() {
     }
   };
 
-  // Lors du changement de catégorie sélectionnée, on recharge les articles
-  useEffect(() => {
-    if (selectedCategory) {
-      fetchArticles(selectedCategory);
-    }
-  }, [selectedCategory]);
+  // Chargement automatique quand selectedCategory change
+  // useEffect(() => {
+  //   if (selectedCategory) {
+  //     fetchArticlesPerso(selectedCategory);
+  //   }
+  // }, [selectedCategory]);
 
-  // Supprime un article en utilisant l'API dans le bon endpoint
+  // --------------------------------
+  // LECTURE : récupérer UN article précis
+  // --------------------------------
+  const fetchOneArticle = useCallback(
+    async (categoryId: string, articleId: string) => {
+      setLoading(true);
+      setError(null);
+      try {
+        const res = await fetch(
+          `/api/categories/${categoryId}/articles/${articleId}`
+        );
+        if (!res.ok) {
+          throw new Error("Erreur lors de la récupération d'un article");
+        }
+        const data = await res.json();
+        // data.article
+        setSelectedArticle(data.article);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Erreur inconnue");
+      } finally {
+        setLoading(false);
+      }
+    },
+    []
+  );
+
+  // Supprimer un article
   const deleteArticle = async (article: Article) => {
     setLoading(true);
     setError(null);
     try {
-      await fetch(
+      const res = await fetch(
         `/api/categories/${article.categorie_id}/articles/${article.id_article}`,
         { method: "DELETE" }
       );
-      setArticles((prevArticles) =>
-        prevArticles.filter((a) => a.id_article !== article.id_article)
+      if (!res.ok) throw new Error("La suppression de l'article a échoué");
+      setArticles((prev) =>
+        prev.filter((a) => a.id_article !== article.id_article)
       );
     } catch (err) {
       setError(
@@ -69,10 +113,10 @@ export function useArticles() {
     }
   };
 
-  // Met à jour un article via l'API en ciblant le endpoint correspondant
-  // On attend ici que updatedArticle contienne au minimum l'id de l'article et l'id de la catégorie
+  // Mettre à jour un article
   const updateArticle = async (
-    updatedArticle: Partial<Article> & Pick<Article, "id_article" | "categorie_id">
+    updatedArticle: Partial<Article> &
+      Pick<Article, "id_article" | "categorie_id">
   ) => {
     setLoading(true);
     setError(null);
@@ -85,12 +129,10 @@ export function useArticles() {
           body: JSON.stringify(updatedArticle),
         }
       );
-      if (!res.ok) {
-        throw new Error("La mise à jour de l'article a échoué");
-      }
+      if (!res.ok) throw new Error("La mise à jour de l'article a échoué");
       const updatedFromServer = await res.json();
-      setArticles((prevArticles) =>
-        prevArticles.map((a) =>
+      setArticles((prev) =>
+        prev.map((a) =>
           a.id_article === updatedFromServer.id_article ? updatedFromServer : a
         )
       );
@@ -103,23 +145,57 @@ export function useArticles() {
     }
   };
 
-  // Ajoute un article à la liste actuelle
+  // Ajouter un nouvel article dans le state local
   const addArticle = (newArticle: Article) => {
     setArticles((prevArticles) => [...prevArticles, newArticle]);
   };
 
+  // 1) Nouveau : fonction pour récupérer la moyenne d’évaluation d’un article
+  // Nouveau fetchMoyenneEvaluations avec retour explicite
+  const fetchMoyenneEvaluations = async (
+    categorieId: string,
+    articleId: string
+  ): Promise<number | null> => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch(
+        `/api/categories/${categorieId}/articles/${articleId}/evaluations/moyenne`
+      );
+      if (!res.ok) {
+        throw new Error("Erreur lors de la récupération de la moyenne");
+      }
+      const data = await res.json();
+      const moyenne = data.moyenne !== undefined ? data.moyenne : null;
+
+      setMoyenneEvaluations(moyenne); // conserve le state si besoin
+      return moyenne; // ajoute ce retour explicite
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "Une erreur inconnue est survenue"
+      );
+      setMoyenneEvaluations(null); // réinitialise en cas d'erreur
+      return null; // retourne null en cas d'erreur
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return {
     articles,
+    selectedArticle,
+    selectedCategory,
     loading,
     error,
-    selectedCategory,
+    moyenneEvaluations, // <--- on l’exporte
     setSelectedCategory,
-    selectedArticle,
     setSelectedArticle,
+    fetchArticlesPerso,
     fetchArticles,
     deleteArticle,
     updateArticle,
     addArticle,
+    fetchOneArticle,
+    fetchMoyenneEvaluations, // <--- on l’exporte aussi
   };
 }
-

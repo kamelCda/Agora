@@ -1,13 +1,19 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import React, { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Input } from "@/app/components/ui/input";
+import { Button } from "@/app/components/ui/button";
+import { Label } from "@/app/components/ui/label";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/app/components/ui/card";
+import { Alert, AlertDescription, AlertTitle } from "@/app/components/ui/alert";
 
 interface AdminSettings {
   telephone: string;
@@ -15,6 +21,7 @@ interface AdminSettings {
   prenom: string;
   adresse: string;
   email: string;
+  ville: string;
 }
 
 export default function AdministrateurSettingPage() {
@@ -27,7 +34,7 @@ export default function AdministrateurSettingPage() {
 
   // Vérification de la session et du rôle « ADMINISTRATEUR »
   useEffect(() => {
-    if (status === "loading") return; 
+    if (status === "loading") return;
     if (!session) {
       router.push("/login");
       return;
@@ -66,7 +73,9 @@ export default function AdministrateurSettingPage() {
 
         setSettings(data.data);
       } catch (err: any) {
-        setError(err.message || "Erreur lors de la récupération des paramètres.");
+        setError(
+          err.message || "Erreur lors de la récupération des paramètres."
+        );
       } finally {
         setLoading(false);
       }
@@ -102,7 +111,9 @@ export default function AdministrateurSettingPage() {
         alert("Paramètres mis à jour avec succès.");
       }
     } catch (err: any) {
-      setError("Erreur lors de la mise à jour.");
+      setError(
+        err instanceof Error ? err.message : "Erreur lors de la mise à jour."
+      );
     }
   };
 
@@ -121,8 +132,8 @@ export default function AdministrateurSettingPage() {
 
   // Rendu du formulaire
   return (
-    <div className="p-6 w-1/2">
-      <Card className="w-full p-4 mx-auto">
+    <div className="p-6 w-full">
+      <Card className="w-full p-4 mx-auto shadow-none border-none">
         <CardHeader>
           <CardTitle>Paramètres Administrateur</CardTitle>
         </CardHeader>
@@ -133,6 +144,7 @@ export default function AdministrateurSettingPage() {
               <Label htmlFor="nom">Nom</Label>
               <Input
                 id="nom"
+                className="border-none focus:ring-0 focus:outline-none"
                 value={settings.nom}
                 onChange={(e) => handleChange("nom", e.target.value)}
               />
@@ -143,6 +155,7 @@ export default function AdministrateurSettingPage() {
               <Label htmlFor="prenom">Prénom</Label>
               <Input
                 id="prenom"
+                className="border-none focus:ring-0 focus:outline-none"
                 value={settings.prenom}
                 onChange={(e) => handleChange("prenom", e.target.value)}
               />
@@ -153,6 +166,7 @@ export default function AdministrateurSettingPage() {
               <Label htmlFor="adresse">Adresse</Label>
               <Input
                 id="adresse"
+                className="border-none focus:ring-0 focus:outline-none"
                 value={settings.adresse}
                 onChange={(e) => handleChange("adresse", e.target.value)}
               />
@@ -163,6 +177,7 @@ export default function AdministrateurSettingPage() {
               <Label htmlFor="email">Email</Label>
               <Input
                 id="email"
+                className="border-none focus:ring-0 focus:outline-none"
                 type="email"
                 value={settings.email}
                 onChange={(e) => handleChange("email", e.target.value)}
@@ -174,6 +189,7 @@ export default function AdministrateurSettingPage() {
               <Label htmlFor="telephone">Téléphone</Label>
               <Input
                 id="telephone"
+                className="border-none focus:ring-0 focus:outline-none"
                 value={settings.telephone}
                 onChange={(e) => handleChange("telephone", e.target.value)}
               />

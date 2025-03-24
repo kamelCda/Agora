@@ -3,32 +3,39 @@
 import { useEffect, useState, FormEvent } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
+
+// Hooks persos
 import { useCategories } from "@/app/DashboardAdministrateur/hooks/useCategories";
 import {
   useArticles,
   Article,
 } from "@/app/DashboardAdministrateur/hooks/useArticles";
 import { useCommentaires } from "@/app/DashboardAdministrateur/hooks/useCommentaires";
-import { Card, CardContent } from "@/components/ui/card";
+
+// Composants UI
+import { Card, CardContent } from "@/app/components/ui/card";
 import {
   Select,
   SelectTrigger,
   SelectValue,
   SelectContent,
   SelectItem,
-} from "@/components/ui/select";
-import { Button } from "@/components/ui/button";
-import UpvoteButton from "@/components/upVoteButton";
+} from "@/app/components/ui/select";
+import { Button } from "@/app/components/ui/button";
+import UpvoteButton from "@/app/components/upVoteButton";
+import EvaluationForm from "@/app/components/EvaluationArticle";
 
 interface CommentaireForm {
   contenu: string;
 }
 
 const PageArticleAdmin = () => {
-  const { data: session, status } = useSession();
   const router = useRouter();
+  const { data: session, status } = useSession();
 
+  // ----------------------------------------------------------------
   // Vérification de la session et des rôles
+  // ----------------------------------------------------------------
   useEffect(() => {
     if (status === "loading") return;
     if (!session) {
@@ -42,29 +49,38 @@ const PageArticleAdmin = () => {
     }
   }, [session, status, router]);
 
-  // Récupération des catégories et articles
+  // ----------------------------------------------------------------
+  // Récupération des catégories
+  // ----------------------------------------------------------------
   const {
     categories,
     loading: categoriesLoading,
     error: categoriesError,
   } = useCategories();
 
+  // ----------------------------------------------------------------
+  // Hook articles : on va utiliser `fetchArticlesPerso` (route /mesArticles)
+  // ----------------------------------------------------------------
   const {
     articles,
-    loading,
-    error,
-    selectedCategory,
-    setSelectedCategory,
     selectedArticle,
     setSelectedArticle,
+    selectedCategory,
+    setSelectedCategory,
+    loading,
+    error,
+    moyenneEvaluations,
     addArticle,
+    fetchMoyenneEvaluations,
+
+    // ⬇️ Import essentiel pour charger la liste depuis "/mesArticles"
+    fetchArticlesPerso,
   } = useArticles();
 
-  // Identifiant utilisateur validé
+  // 4) ID utilisateur
   const utilisateurId = session?.user.id_utilisateur;
-  console.log(utilisateurId);
 
-  // Hook pour les commentaires, activé uniquement si un article est sélectionné
+  // 5) Hook pour les commentaires (activé uniquement si un article est sélectionné)
   const {
     commentaires,
     loading: loadingCommentaires,
@@ -78,14 +94,23 @@ const PageArticleAdmin = () => {
     selectedArticle ? selectedArticle.id_article : ""
   );
 
-  // Chargement des commentaires dès qu'un article est sélectionné
+  // Quand on sélectionne un article, on charge directement ses commentaires
   useEffect(() => {
     if (selectedArticle) {
       fetchCommentaires();
     }
-  }, [selectedArticle]);
+  }, [selectedArticle, fetchCommentaires]);
 
-  // Récupère les détails d’un article via la route imbriquée
+  // 6) Gestion manuelle du changement de catégorie
+  //    On appelle "fetchArticles" ici pour pointer sur "/articles"
+  const handleCategoryChange = async (categoryId: string) => {
+    setSelectedCategory(categoryId);
+    setSelectedArticle(null);
+    // Appel MANUEL à la fonction pour charger les articles
+    await fetchArticlesPerso(categoryId);
+  };
+
+  // 7) Récupération du détail d’un article et de sa moyenne
   const fetchArticleDetails = async (articleId: string) => {
     if (!selectedCategory) return;
     try {
@@ -95,6 +120,9 @@ const PageArticleAdmin = () => {
       if (!res.ok) throw new Error("La récupération de l'article a échoué");
       const data = await res.json();
       setSelectedArticle(data.article || null);
+
+      // Récupération de la moyenne
+      await fetchMoyenneEvaluations(selectedCategory, articleId);
     } catch (error) {
       console.error("Erreur lors de la récupération de l'article :", error);
     }
@@ -104,29 +132,27 @@ const PageArticleAdmin = () => {
     fetchArticleDetails(articleId);
   };
 
-  const handleCategoryChange = (categoryId: string) => {
-    setSelectedCategory(categoryId);
-    setSelectedArticle(null);
-  };
-
-  // États et gestion du formulaire d'ajout d'un commentaire
+  // ---------------------------------------------------------
+  // Gestion des commentaires (ajout, édition, suppression)
+  // ---------------------------------------------------------
   const [newComment, setNewComment] = useState<CommentaireForm>({
     contenu: "",
   });
   const handlePostComment = async (e: FormEvent) => {
     e.preventDefault();
-    if (newComment.contenu.trim() === "") return;
+    if (!newComment.contenu.trim()) return;
     await postCommentaire(newComment.contenu);
     setNewComment({ contenu: "" });
   };
 
-  // Pour la modification d'un commentaire
   const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
   const [editCommentContent, setEditCommentContent] = useState("");
+
   const handleEditComment = (commentaireId: string, contenu: string) => {
     setEditingCommentId(commentaireId);
     setEditCommentContent(contenu);
   };
+
   const handleUpdateComment = async (commentaireId: string) => {
     await updateCommentaire({
       id_commentaire: commentaireId,
@@ -136,11 +162,19 @@ const PageArticleAdmin = () => {
     setEditCommentContent("");
   };
 
-  // Gestion des articles (ajout, suppression, mise à jour)
+  // ---------------------------------------------------------
+  // Gestion des articles (suppression, édition, création)
+  // ---------------------------------------------------------
   const [editTitre, setEditTitre] = useState("");
   const [editContenu, setEditContenu] = useState("");
-  const [newTitre, setNewTitre] = useState("");
-  const [newContenu, setNewContenu] = useState("");
+
+  // Préremplir le formulaire d'édition quand un article est sélectionné
+  useEffect(() => {
+    if (selectedArticle) {
+      setEditTitre(selectedArticle.titre);
+      setEditContenu(selectedArticle.contenu);
+    }
+  }, [selectedArticle]);
 
   // Suppression d'un article
   const handleDeleteArticle = async (article: Article) => {
@@ -151,14 +185,14 @@ const PageArticleAdmin = () => {
           { method: "DELETE" }
         );
         if (!res.ok) throw new Error("La suppression de l'article a échoué");
-        // Mettez à jour la liste des articles selon votre hook
+        // Mettez à jour la liste si nécessaire (par ex. refetch ou remove localement)
       } catch (error) {
         console.error("Erreur lors de la suppression de l'article :", error);
       }
     }
   };
 
-  // Mise à jour d'un article
+  // Édition / Mise à jour d'un article
   const handleUpdateArticle = async (e: FormEvent) => {
     e.preventDefault();
     if (!selectedArticle || !selectedCategory) return;
@@ -177,14 +211,17 @@ const PageArticleAdmin = () => {
         }
       );
       if (!res.ok) throw new Error("La mise à jour de l'article a échoué");
-      const data = await res.json();
+      // On pourrait recharger l'article ou mettre à jour localement
       setSelectedArticle(null);
     } catch (error) {
       console.error("Erreur lors de la mise à jour de l'article :", error);
     }
   };
 
-  // Ajout d'un nouvel article
+  // Création d'un nouvel article
+  const [newTitre, setNewTitre] = useState("");
+  const [newContenu, setNewContenu] = useState("");
+
   const handleAddArticle = async (e: FormEvent) => {
     e.preventDefault();
     if (!selectedCategory) {
@@ -205,6 +242,7 @@ const PageArticleAdmin = () => {
       });
       if (!res.ok) throw new Error("L'ajout de l'article a échoué");
       const data = await res.json();
+      // Mise à jour du state local
       addArticle(data.article);
       setNewTitre("");
       setNewContenu("");
@@ -213,6 +251,9 @@ const PageArticleAdmin = () => {
     }
   };
 
+  // ---------------------------------------------------------
+  // Rendu / UI
+  // ---------------------------------------------------------
   if (status === "loading") {
     return <p>Chargement de la session...</p>;
   }
@@ -221,11 +262,13 @@ const PageArticleAdmin = () => {
     <div className="p-4">
       <h1 className="text-2xl mb-4">Articles par Catégorie</h1>
 
+      {/* Chargement / Erreur Catégories */}
       {categoriesLoading && <p>Chargement des catégories...</p>}
       {categoriesError && (
         <p className="text-red-500">Erreur: {categoriesError}</p>
       )}
 
+      {/* Sélection de la catégorie */}
       {categories.length > 0 && (
         <Select onValueChange={handleCategoryChange}>
           <SelectTrigger className="w-full mb-4">
@@ -244,10 +287,11 @@ const PageArticleAdmin = () => {
         </Select>
       )}
 
+      {/* Chargement / Erreur Articles */}
       {loading && <p>Chargement des articles...</p>}
       {error && <p className="text-red-500">Erreur: {error}</p>}
 
-      {/* Affichage de la liste des articles */}
+      {/* Liste d'articles si aucun article n'est sélectionné */}
       {!selectedArticle ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {articles.map((article: Article) => (
@@ -263,6 +307,8 @@ const PageArticleAdmin = () => {
                 <p className="text-xs text-gray-500">
                   Publié le {new Date(article.creeLe).toLocaleDateString()}
                 </p>
+
+                {/* Supprimer */}
                 <div className="mt-2 flex gap-2">
                   <Button
                     variant="destructive"
@@ -271,26 +317,66 @@ const PageArticleAdmin = () => {
                     Supprimer
                   </Button>
                 </div>
+
+                {/* Formulaire d’évaluation */}
+                <EvaluationForm
+                  categorieId={article.categorie_id}
+                  articleId={article.id_article}
+                  onEvaluationDone={() =>
+                    fetchMoyenneEvaluations(
+                      article.categorie_id,
+                      article.id_article
+                    )
+                  }
+                />
               </CardContent>
             </Card>
           ))}
         </div>
       ) : (
-        // Détail et édition de l'article sélectionné, incluant la gestion des commentaires
+        // Sinon, détails de l'article sélectionné
         <div className="p-4 mt-4 border rounded-md bg-white">
           <h2 className="text-2xl mb-2">{selectedArticle.titre}</h2>
           <p>{selectedArticle.contenu}</p>
           <p className="text-xs text-gray-500">
             Publié le {new Date(selectedArticle.creeLe).toLocaleDateString()}
           </p>
-          <Button
-            onClick={() => {
-              setSelectedArticle(null);
-            }}
-            className="mt-4"
-          >
+
+          {/* Affichage de la moyenne */}
+          <p className="mt-2 font-semibold">
+            Moyenne des évaluations :{" "}
+            {moyenneEvaluations !== null
+              ? moyenneEvaluations.toFixed(1)
+              : "Pas encore évalué"}
+          </p>
+
+          <Button onClick={() => setSelectedArticle(null)} className="mt-4">
             Retour aux articles
           </Button>
+
+          {/* Formulaire de mise à jour de l'article */}
+          <form onSubmit={handleUpdateArticle} className="mt-4">
+            <div className="mb-4">
+              <label className="block text-sm font-medium">Titre</label>
+              <input
+                type="text"
+                value={editTitre}
+                onChange={(e) => setEditTitre(e.target.value)}
+                className="mt-1 block w-full border rounded-md p-2"
+                required
+              />
+            </div>
+            <div className="mb-4">
+              <label className="block text-sm font-medium">Contenu</label>
+              <textarea
+                value={editContenu}
+                onChange={(e) => setEditContenu(e.target.value)}
+                className="mt-1 block w-full border rounded-md p-2"
+                required
+              />
+            </div>
+            <Button type="submit">Mettre à jour article</Button>
+          </form>
 
           {/* Section Commentaires */}
           <h3 className="text-xl mt-6 mb-4">Commentaires :</h3>
@@ -335,7 +421,6 @@ const PageArticleAdmin = () => {
                       articleId={selectedArticle.id_article}
                       commentaireId={commentaire.id_commentaire}
                       utilisateurId={utilisateurId}
-                      // On affiche le nombre d'upvotes en comptant le tableau d'upvotes
                       initialUpvotes={commentaire.upvotes.length}
                     />
                     <Button
@@ -402,7 +487,7 @@ const PageArticleAdmin = () => {
                 required
               />
             </div>
-            <Button type="submit">Ajouter l'article</Button>
+            <Button type="submit">Ajouter article</Button>
           </form>
         </div>
       )}

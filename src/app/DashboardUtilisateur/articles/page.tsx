@@ -9,16 +9,16 @@ import {
   Article,
 } from "@/app/DashboardAdministrateur/hooks/useArticles";
 import { useCommentaires } from "@/app/DashboardAdministrateur/hooks/useCommentaires";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent } from "@/app/components/ui/card";
 import {
   Select,
   SelectTrigger,
   SelectValue,
   SelectContent,
   SelectItem,
-} from "@/components/ui/select";
-import { Button } from "@/components/ui/button";
-import UpvoteButton from "@/components/upVoteButton";
+} from "@/app/components/ui/select";
+import { Button } from "@/app/components/ui/button";
+import UpvoteButton from "@/app/components/upVoteButton";
 
 interface CommentaireForm {
   contenu: string;

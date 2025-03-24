@@ -2,7 +2,7 @@
 
 import "./globals.css";
 import { AuthProvider } from "./providers/AuthProvider";
-import { ThemeProvider } from "@/components/theme/theme-provider";
+import { ThemeProvider } from "@/app/components/theme/theme-provider";
 import { Inter } from "next/font/google";
 
 const inter = Inter({ subsets: ["latin"] });

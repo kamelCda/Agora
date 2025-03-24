@@ -1,56 +1,4 @@
-// import { NextRequest, NextResponse } from "next/server";
-// import prisma from "@/lib/prisma";
-// const headers = {
-//   "Content-Type": "application/json",
-// };
-
-// export async function POST(req: NextRequest) {
-//   try {
-//     const { titre, contenu, creeLe, utilisateur_id, categorie_id } =
-//       await req.json();
-
-//     const article = await prisma.article.create({
-//       data: {
-//         titre,
-//         contenu,
-//         creeLe,
-//         utilisateur_id,
-//         categorie_id,
-//       },
-//     });
-//     return NextResponse.json({ success: true, article }, { status: 201 });
-//   } catch (error: any) {
-//     return new Response(JSON.stringify({ error: error.message }), {
-//       status: 400,
-//       headers,
-//     });
-//   }
-// }
-
-// export async function GET(
-//   req: Request,
-//   { params }: { params: { categorie_id: string } }
-// ) {
-//   const { categorie_id } = params;
-
-//   try {
-//     const articles = await prisma.article.findMany({
-//       where: { categorie_id },
-//       include: {
-//         commentaires: true,
-//         categorie: {
-//           select: {
-//             nomCategorie: true,
-//           },
-//         },
-//       },
-//     });
-//     return NextResponse.json({ success: true, articles }, { status: 200 });
-//   } catch (error: any) {
-//     return NextResponse.json({ error: error.message }, { status: 400 });
-//   }
-// }
-
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getServerSession } from "next-auth/next";
@@ -96,7 +44,7 @@ export async function POST(req: NextRequest) {
         categorie_id,
       },
     });
-    return NextResponse.json({ success: true, article }, { status: 201 });
+    return NextResponse.json({ success: true, article }/* eslint-disable @typescript-eslint/no-explicit-any */);
   } catch (error: any) {
     return new Response(JSON.stringify({ error: error.message }), {
       status: 400,

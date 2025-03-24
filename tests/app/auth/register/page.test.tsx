@@ -2,112 +2,120 @@
 import React from "react";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import "@testing-library/jest-dom";
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, Mock } from "vitest";
 import RegisterPage from "@/app/auth/register/page";
 import { useRouter } from "next/navigation";
 
-// Mock de useRouter de Next.js
+// Mock router
+const pushMock = vi.fn();
 vi.mock("next/navigation", () => ({
-  useRouter: () => ({
-    push: vi.fn(),
-  }),
+  useRouter: () => ({ push: pushMock }),
 }));
 
-// Mock de fetch global
+
+// Mock global fetch
 global.fetch = vi.fn();
 
 describe("RegisterPage", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    (global.fetch as any).mockClear();
   });
 
   it("affiche le formulaire d'inscription avec tous les champs requis", () => {
     render(<RegisterPage />);
 
-    expect(screen.getByLabelText("Nom")).toBeInTheDocument();
-    expect(screen.getByLabelText("Prénom")).toBeInTheDocument();
-    expect(screen.getByLabelText("Email")).toBeInTheDocument();
-    expect(screen.getByLabelText("Mot de passe")).toBeInTheDocument();
-    expect(screen.getByLabelText("Ville")).toBeInTheDocument();
-    expect(screen.getByLabelText("Adresse")).toBeInTheDocument();
-    expect(screen.getByLabelText("Nom d'utilisateur")).toBeInTheDocument();
+    expect(screen.getByLabelText(/^nom$/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/^prenom$/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/^email$/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/^mot de passe$/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/^telephone$/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/^ville$/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/^adresse$/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/^nom d'utilisateur$/i)).toBeInTheDocument();
   });
 
   it("affiche un message d'erreur si l'inscription échoue", async () => {
-    (global.fetch as vi.Mock).mockResolvedValueOnce({
+    (global.fetch as any).mockResolvedValueOnce({
       ok: false,
-      json: async () => ({ error: "Erreur lors de l'inscription" }),
+      json: async () => ({ error: "Erreur serveur" }),
     });
 
     render(<RegisterPage />);
 
-    fireEvent.change(screen.getByLabelText("Nom"), {
+    fireEvent.change(screen.getByLabelText(/^nom$/i), {
       target: { value: "John" },
     });
-    fireEvent.change(screen.getByLabelText("Prénom"), {
+    fireEvent.change(screen.getByLabelText(/^prenom$/i), {
       target: { value: "Doe" },
     });
-    fireEvent.change(screen.getByLabelText("Email"), {
-      target: { value: "test@example.com" },
+    fireEvent.change(screen.getByLabelText(/^email$/i), {
+      target: { value: "john@example.com" },
     });
-    fireEvent.change(screen.getByLabelText("Mot de passe"), {
-      target: { value: "password" },
+    fireEvent.change(screen.getByLabelText(/^mot de passe$/i), {
+      target: { value: "password123" },
     });
-    fireEvent.change(screen.getByLabelText("Ville"), {
+    fireEvent.change(screen.getByLabelText(/^telephone$/i), {
+      target: { value: "0123456789" },
+    });
+    fireEvent.change(screen.getByLabelText(/^ville$/i), {
       target: { value: "Paris" },
     });
-    fireEvent.change(screen.getByLabelText("Adresse"), {
-      target: { value: "123 Rue Exemple" },
+    fireEvent.change(screen.getByLabelText(/^adresse$/i), {
+      target: { value: "10 rue Exemple" },
     });
-    fireEvent.change(screen.getByLabelText("Nom d'utilisateur"), {
-      target: { value: "johndoe" },
+    fireEvent.change(screen.getByLabelText(/^nom d'utilisateur$/i), {
+      target: { value: "john_doe" },
     });
 
-    fireEvent.click(screen.getByRole("button", { name: "S'inscrire" }));
+    fireEvent.click(screen.getByRole("button", { name: /S'inscrire/i }));
 
     await waitFor(() => {
-      expect(
-        screen.getByText("Erreur lors de l'inscription")
-      ).toBeInTheDocument();
+      expect(screen.getByText("Erreur serveur")).toBeInTheDocument();
     });
+
+    expect(fetch).toHaveBeenCalledTimes(1);
   });
 
   it("redirige vers la page de connexion après une inscription réussie", async () => {
-    const mockRouter = useRouter();
-
-    (global.fetch as vi.Mock).mockResolvedValueOnce({
+    (global.fetch as any).mockResolvedValueOnce({
       ok: true,
       json: async () => ({}),
     });
 
     render(<RegisterPage />);
 
-    fireEvent.change(screen.getByLabelText("Nom"), {
+    fireEvent.change(screen.getByLabelText(/^nom$/i), {
       target: { value: "John" },
     });
-    fireEvent.change(screen.getByLabelText("Prénom"), {
+    fireEvent.change(screen.getByLabelText(/^prenom$/i), {
       target: { value: "Doe" },
     });
-    fireEvent.change(screen.getByLabelText("Email"), {
-      target: { value: "test@example.com" },
+    fireEvent.change(screen.getByLabelText(/^email$/i), {
+      target: { value: "john@example.com" },
     });
-    fireEvent.change(screen.getByLabelText("Mot de passe"), {
-      target: { value: "password" },
+    fireEvent.change(screen.getByLabelText(/^mot de passe$/i), {
+      target: { value: "password123" },
     });
-    fireEvent.change(screen.getByLabelText("Ville"), {
+    fireEvent.change(screen.getByLabelText(/^telephone$/i), {
+      target: { value: "0123456789" },
+    });
+    fireEvent.change(screen.getByLabelText(/^ville$/i), {
       target: { value: "Paris" },
     });
-    fireEvent.change(screen.getByLabelText("Adresse"), {
+    fireEvent.change(screen.getByLabelText(/^adresse$/i), {
       target: { value: "123 Rue Exemple" },
     });
-    fireEvent.change(screen.getByLabelText("Nom d'utilisateur"), {
-      target: { value: "johndoe" },
+    fireEvent.change(screen.getByLabelText(/^nom d'utilisateur$/i), {
+      target: { value: "john_doe" },
     });
 
-    fireEvent.click(screen.getByRole("button", { name: "S'inscrire" }));
+    fireEvent.click(screen.getByRole("button", { name: /S'inscrire/i }));
 
     await waitFor(() => {
-      expect(mockRouter.push).toHaveBeenCalledWith("/auth/login");
+      expect(pushMock).toHaveBeenCalledWith("/auth/login");
     });
+
+    expect(fetch).toHaveBeenCalledTimes(1);
   });
 });

@@ -9,7 +9,7 @@ const CommentaireAdminPage = () => {
   const handleUpvote = async () => {
     if (!commentaire_id || !utilisateurId) return;
 
-    const response = await fetch("/api/commentaires/upvote", {
+    const response = await fetch(`/api/utilisateurs/${utilisateurId}/commentaires/upvote`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ commentaire_id, utilisateur_id: utilisateurId }),

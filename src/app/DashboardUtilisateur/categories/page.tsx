@@ -1,9 +1,9 @@
 "use client";
 import React, { useState } from "react";
 import { useCategories } from "@/app/DashboardAdministrateur/hooks/useCategories";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Button } from "@/app/components/ui/button";
+import { Input } from "@/app/components/ui/input";
+import { Card, CardContent, CardHeader } from "@/app/components/ui/card";
 
 export default function CategorieUtilisateurPage() {
   const { categories, loading, error, addCategory, deleteCategory } =
