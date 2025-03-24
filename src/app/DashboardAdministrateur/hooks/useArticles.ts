@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useCallback } from "react";
 
 export interface Article {
   id_article: string;
@@ -57,13 +57,6 @@ export function useArticles() {
       setLoading(false);
     }
   };
-
-  // Chargement automatique quand selectedCategory change
-  // useEffect(() => {
-  //   if (selectedCategory) {
-  //     fetchArticlesPerso(selectedCategory);
-  //   }
-  // }, [selectedCategory]);
 
   // --------------------------------
   // LECTURE : récupérer UN article précis

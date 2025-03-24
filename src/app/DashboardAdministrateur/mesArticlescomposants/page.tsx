@@ -35,7 +35,7 @@ const PageArticleAdmin = () => {
   }, [session, status, router]);
 
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const [selectedArticle, setSelectedArticle] = useState<any>(null);
+  const [selectedArticle, setSelectedArticle] = useState<Article | null>(null);
 
   const {
     // Éléments de useArticles
@@ -43,7 +43,6 @@ const PageArticleAdmin = () => {
     loading,
     error,
     moyenneEvaluations,
-    addArticle,
     fetchMoyenneEvaluations,
     fetchArticlesPerso,
   } = useArticles();
@@ -105,9 +104,7 @@ const PageArticleAdmin = () => {
             onArticleClick={(articleId) => fetchArticleDetails(articleId)}
             onRefetchMoyenne={handleRefetchMoyenne}
             selectedCategory={selectedCategory}
-            onDeleteArticle={function (article: Article): void {
-              throw new Error("Function not implemented.");
-            }}
+            onDeleteArticle={() => {}}
           />
 
           {/* Formulaire de création d’article */}

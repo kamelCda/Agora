@@ -60,8 +60,9 @@ export async function DELETE(req: NextRequest, { params }: Params) {
       { success: true, message: "Commentaire supprimé avec succès" },
       { status: 200 }
     );
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 400 });
+  } catch (error: unknown) {
+    const err = error as Error;
+    return NextResponse.json({ error: err.message }, { status: 400 });
   }
 }
 
@@ -98,7 +99,8 @@ export async function PUT(req: NextRequest, { params }: Params) {
       },
     });
     return NextResponse.json({ success: true, commentaire }, { status: 201 });
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 400 });
+  } catch (error: unknown) {
+    const err = error as Error;
+    return NextResponse.json({ error: err.message }, { status: 400 });
   }
 }
