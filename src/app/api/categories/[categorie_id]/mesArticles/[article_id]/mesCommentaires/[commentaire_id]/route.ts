@@ -1,23 +1,46 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
-import { Params } from "../../route";
 
-export async function GET(req: NextRequest, { params }: Params) {
+// 👇 Fonction utilitaire pour extraire les paramètres depuis l'URL
+function extractIds(pathname: string) {
+  const match = pathname.match(
+    /\/utilisateurs\/([^/]+)\/articles\/([^/]+)\/commentaires\/([^/]+)/
+  );
+  if (!match) return null;
+
+  const [, utilisateur_id, article_id, commentaire_id] = match;
+  return { utilisateur_id, article_id, commentaire_id };
+}
+
+export async function GET(req: NextRequest) {
+  const ids = extractIds(req.nextUrl.pathname);
+
+  if (!ids) {
+    return NextResponse.json(
+      { error: "Paramètres introuvables dans l'URL" },
+      { status: 400 }
+    );
+  }
+
+  const { utilisateur_id, article_id, commentaire_id } = ids;
+
   try {
-    const MonCommentaire = await prisma.commentaire.findUnique({
+    const MonCommentaire = await prisma.commentaire.findFirst({
       where: {
-        utilisateur_id: params.utilisateur_id,
-        article_id: params.article_id,
-        id_commentaire: params.commentaire_id,
+        utilisateur_id,
+        article_id,
+        id_commentaire: commentaire_id,
       },
     });
+
     return NextResponse.json(
       { success: true, MonCommentaire },
-      { status: 201 }
+      { status: 200 }
     );
   } catch (error: unknown) {
-    const err = error as Error;
-    return NextResponse.json({ error: err.message }, { status: 400 });
+    return NextResponse.json(
+      { error: (error as Error).message },
+      { status: 400 }
+    );
   }
-  
 }
