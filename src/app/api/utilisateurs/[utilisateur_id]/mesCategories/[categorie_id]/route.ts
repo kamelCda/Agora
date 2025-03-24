@@ -5,28 +5,39 @@ const headers = {
   "Content-Type": "application/json",
 };
 
-export async function GET(
-  req: NextRequest,
-  { params }: { params: { utilisateur_id: string } }
-) {
-  // Destructure the utilisateur_id from params
-  const { utilisateur_id } = params;
+// 🔧 Helper pour extraire utilisateur_id depuis l'URL
+function extractUtilisateurId(pathname: string): string | null {
+  const match = pathname.match(/\/utilisateurs\/([^/]+)/);
+  return match ? match[1] : null;
+}
+
+export async function GET(req: NextRequest) {
+  const utilisateur_id = extractUtilisateurId(req.nextUrl.pathname);
+
+  if (!utilisateur_id) {
+    return NextResponse.json(
+      { error: "utilisateur_id introuvable dans l'URL" },
+      { status: 400, headers }
+    );
+  }
 
   try {
-    const MaCatégorie = await prisma.categorie.findFirst({
+    const MaCategorie = await prisma.categorie.findFirst({
       where: { utilisateur_id },
     });
 
-    if (!MaCatégorie) {
+    if (!MaCategorie) {
       return NextResponse.json(
-        { error: "Category non trouvée" },
+        { error: "Catégorie non trouvée" },
         { status: 404, headers }
       );
     }
 
-    return NextResponse.json(MaCatégorie, { headers });
+    return NextResponse.json(MaCategorie, { status: 200, headers });
   } catch (error: unknown) {
-    const err = error as Error;
-    return NextResponse.json({ error: err.message }, { status: 400 });
+    return NextResponse.json(
+      { error: (error as Error).message },
+      { status: 400, headers }
+    );
   }
 }
