@@ -50,8 +50,9 @@ const UpvoteButton: React.FC<UpvoteButtonProps> = ({
         );
         setHasVoted(false); // Réautoriser le vote si la requête échoue
       }
-    } catch (error) {
-      setErrorMessage("Erreur réseau lors de l'upvote.");
+    } catch {
+      setErrorMessage("Une erreur est survenue lors de l&apos;upvote.");
+
       setHasVoted(false); // Réautoriser le vote si la requête échoue
     }
   };

@@ -82,7 +82,7 @@ const CreateArticleForm: React.FC<CreateArticleFormProps> = ({
             required
           />
         </div>
-        <Button type="submit">Ajouter l'article</Button>
+        <Button type="submit">Ajouter l&apos;article</Button>
       </form>
     </div>
   );
