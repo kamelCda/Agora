@@ -1,28 +1,45 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
-interface Params {
-  params: {
-    utilisateur_id: string;
-    article_id: string;
-    commentaire_id: string;
-  };
+
+// Utilitaire pour extraire les paramètres
+function extractIds(pathname: string) {
+  const match = pathname.match(
+    /\/utilisateurs\/([^/]+)\/articles\/([^/]+)\/commentaires\/([^/]+)/
+  );
+  if (!match) return null;
+
+  const [, utilisateur_id, article_id, commentaire_id] = match;
+  return { utilisateur_id, article_id, commentaire_id };
 }
 
-export async function GET(req: NextRequest, { params }: Params) {
+export async function GET(req: NextRequest) {
+  const ids = extractIds(req.nextUrl.pathname);
+  if (!ids) {
+    return NextResponse.json(
+      { error: "Paramètres introuvables" },
+      { status: 400 }
+    );
+  }
+
+  const { utilisateur_id, article_id, commentaire_id } = ids;
+
   try {
-    const MonCommentaire = await prisma.commentaire.findUnique({
+    const MonCommentaire = await prisma.commentaire.findFirst({
       where: {
-        utilisateur_id: params.utilisateur_id,
-        article_id: params.article_id,
-        id_commentaire: params.commentaire_id,
+        id_commentaire: commentaire_id,
+        article_id: article_id,
+        utilisateur_id: utilisateur_id,
       },
     });
+
     return NextResponse.json(
       { success: true, MonCommentaire },
-      { status: 201 }
+      { status: 200 }
     );
   } catch (error: unknown) {
-    const err = error as Error;
-    return NextResponse.json({ error: err.message }, { status: 400 });
+    return NextResponse.json(
+      { error: (error as Error).message },
+      { status: 400 }
+    );
   }
 }
