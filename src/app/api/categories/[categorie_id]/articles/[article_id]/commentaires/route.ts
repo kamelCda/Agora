@@ -16,7 +16,9 @@ export async function POST(req: NextRequest) {
 
   const userRoles: string[] = session.user.role;
   if (
-    !userRoles.some((role) => ["ADMINISTRATEUR", "MODERATEUR"].includes(role))
+    !userRoles.some((role) =>
+      ["ADMINISTRATEUR", "MODERATEUR", "UTILISATEUR"].includes(role)
+    )
   ) {
     return NextResponse.json(
       { error: "interdit: vous n'etes pas autorisé à poster un commentaire" },
@@ -26,7 +28,10 @@ export async function POST(req: NextRequest) {
 
   const article_id = extractArticleId(req.nextUrl.pathname);
   if (!article_id) {
-    return NextResponse.json({ error: "article_id introuvable dans l'URL" }, { status: 400 });
+    return NextResponse.json(
+      { error: "article_id introuvable dans l'URL" },
+      { status: 400 }
+    );
   }
 
   try {
@@ -45,14 +50,20 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ success: true, commentaire }, { status: 201 });
   } catch (error: unknown) {
-    return NextResponse.json({ error: (error as Error).message }, { status: 400 });
+    return NextResponse.json(
+      { error: (error as Error).message },
+      { status: 400 }
+    );
   }
 }
 
 export async function GET(req: NextRequest) {
   const article_id = extractArticleId(req.nextUrl.pathname);
   if (!article_id) {
-    return NextResponse.json({ error: "article_id introuvable dans l'URL" }, { status: 400 });
+    return NextResponse.json(
+      { error: "article_id introuvable dans l'URL" },
+      { status: 400 }
+    );
   }
 
   try {
@@ -64,6 +75,9 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({ success: true, commentaires }, { status: 200 });
   } catch (error: unknown) {
-    return NextResponse.json({ error: (error as Error).message }, { status: 400 });
+    return NextResponse.json(
+      { error: (error as Error).message },
+      { status: 400 }
+    );
   }
 }
