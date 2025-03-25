@@ -131,8 +131,8 @@ export default function UtilisateurSettingPage() {
   if (!settings) return <p>Impossible de charger les paramètres.</p>;
 
   return (
-    <div className="p-6 w-1/2">
-      <Card className="w-full p-4 mx-auto">
+    <div className="p-6  w-full">
+      <Card className="w-full p-6 mx-auto">
         <CardHeader>
           <CardTitle>Paramètres Utilisateur</CardTitle>
         </CardHeader>
