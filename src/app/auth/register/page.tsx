@@ -31,7 +31,7 @@ export default function RegisterPage() {
     e.preventDefault();
     setError("");
 
-    const res = await fetch("/api/utilisateurs/inscriptionViaFormulaire", {
+    const res = await fetch("/api/utilisateurs/", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(formData),
