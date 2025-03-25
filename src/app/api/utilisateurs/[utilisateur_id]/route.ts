@@ -1,8 +1,6 @@
 import prisma from "@/lib/prisma";
 import bcrypt from "bcrypt";
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/lib/auth";
 
 const headers = {
   "Content-Type": "application/json",
@@ -39,6 +37,7 @@ export async function GET(req: NextRequest) {
       { status: 200, headers }
     );
   } catch (error) {
+    console.error("Erreur GET utilisateur :", error);
     return NextResponse.json(
       { error: "Erreur interne du serveur" },
       { status: 500 }
@@ -105,6 +104,7 @@ export async function PATCH(req: NextRequest) {
       { status: 200 }
     );
   } catch (error) {
+    console.error("Erreur PATCH utilisateur :", error);
     return NextResponse.json(
       { success: false, error: "Erreur lors de la mise à jour" },
       { status: 500 }
@@ -132,7 +132,8 @@ export async function DELETE(req: NextRequest) {
       },
       { status: 200 }
     );
-  } catch (error: unknown) {
+  } catch (error) {
+    console.error("Erreur DELETE utilisateur :", error);
     return NextResponse.json(
       { error: (error as Error).message },
       { status: 400 }
