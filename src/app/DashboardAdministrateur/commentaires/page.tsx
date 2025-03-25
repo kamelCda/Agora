@@ -1,5 +1,5 @@
-"use client"
-import { useUtilisateur } from "@/app/contexts/page";
+"use client";
+import { useUtilisateur } from "@/app/components/UtilisateurContext";
 import { useParams } from "next/navigation";
 
 const CommentaireAdminPage = () => {
@@ -9,11 +9,14 @@ const CommentaireAdminPage = () => {
   const handleUpvote = async () => {
     if (!commentaire_id || !utilisateurId) return;
 
-    const response = await fetch(`/api/utilisateurs/${utilisateurId}/commentaires/upvote`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ commentaire_id, utilisateur_id: utilisateurId }),
-    });
+    const response = await fetch(
+      `/api/utilisateurs/${utilisateurId}/commentaires/upvote`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ commentaire_id, utilisateur_id: utilisateurId }),
+      }
+    );
 
     if (response.ok) {
       console.log("Upvote réussi");

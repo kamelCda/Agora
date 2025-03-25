@@ -15,9 +15,8 @@ export const UtilisateurProvider: React.FC<{ children: React.ReactNode }> = ({
   const [utilisateurId, setUtilisateurId] = useState<string | null>(null);
 
   useEffect(() => {
-    // Simulation de récupération de l'utilisateur connecté depuis une API
     const fetchUtilisateur = async () => {
-      const response = await fetch("/api/utilisateur");
+      const response = await fetch(`/api/utilisateurs/${utilisateurId}`);
       const data = await response.json();
       setUtilisateurId(data.utilisateur_id);
     };

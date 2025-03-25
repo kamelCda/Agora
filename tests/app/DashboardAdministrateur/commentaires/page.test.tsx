@@ -4,10 +4,10 @@
 import React from "react";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import "@testing-library/jest-dom";
-import { describe, it, expect, vi, beforeEach,Mock } from "vitest";
+import { describe, it, expect, vi, beforeEach, Mock } from "vitest";
 import CommentaireAdminPage from "@/app/DashboardAdministrateur/commentaires/page";
 import { useParams } from "next/navigation";
-import { useUtilisateur } from "@/app/contexts/page";
+import { useUtilisateur } from "@/app/components/UtilisateurContext";
 
 // Mock des hooks
 vi.mock("next/navigation", () => ({
@@ -61,14 +61,17 @@ describe("CommentaireAdminPage", () => {
     fireEvent.click(button);
 
     await waitFor(() => {
-      expect(global.fetch).toHaveBeenCalledWith("/api/utilisateurs/user1/commentaires/upvote", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          commentaire_id: "123",
-          utilisateur_id: "user1",
-        }),
-      });
+      expect(global.fetch).toHaveBeenCalledWith(
+        "/api/utilisateurs/user1/commentaires/upvote",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            commentaire_id: "123",
+            utilisateur_id: "user1",
+          }),
+        }
+      );
     });
   });
 
